@@ -66,7 +66,11 @@ files as prospective rather than backfilled.
 
 ## Parsing
 
+Parsing needs `pdfplumber`, which is an optional extra rather than a core
+dependency, since archiving and modelling do not require it:
+
 ```bash
+python -m pip install -e '.[pdf]'
 sports parse-injuries --archive data/injury-archive --out data/injury-archive/parsed.csv
 ```
 

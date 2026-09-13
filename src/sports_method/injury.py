@@ -184,6 +184,13 @@ def parse_to_csv(archive, out, limit=None, time_budget=None, chunk=50):
     so it can be re-run against an unchanged record after a parser fix.
     """
     import time
+    # A missing parser is an environment problem, not a bad file: fail once, now,
+    # rather than reporting the same error for every PDF in the archive.
+    try:
+        import pdfplumber  # noqa: F401
+    except ImportError as exc:
+        raise RuntimeError("pdfplumber is required to parse injury reports; install it with "
+                           "python -m pip install -e '.[pdf]'") from exc
     archive, out = Path(archive), Path(out)
     pdfs = sorted((archive/"pdf").glob("*.pdf"))
     if not pdfs:
@@ -198,6 +205,8 @@ def parse_to_csv(archive, out, limit=None, time_budget=None, chunk=50):
     for path in todo:
         try:
             frame = parse_report(path)
+        except ImportError:                           # environment fault, never per-file
+            raise
         except Exception as exc:                      # a malformed PDF must not lose prior work
             failures.append({"source": path.name, "error": str(exc)[:200]})
             continue

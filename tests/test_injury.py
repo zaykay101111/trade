@@ -160,3 +160,24 @@ def test_no_pdfs_rejected(tmp_path):
     (tmp_path/'archive'/'pdf').mkdir(parents=True)
     with pytest.raises(ValueError, match='No PDFs'):
         parse_to_csv(tmp_path/'archive', tmp_path/'out.csv')
+
+
+def test_missing_parser_fails_once_not_per_file(tmp_path, monkeypatch):
+    """A missing dependency must stop immediately, not be reported for every PDF."""
+    import builtins
+    from sports_method.injury import parse_to_csv
+    archive = tmp_path/'archive'
+    (archive/'pdf').mkdir(parents=True)
+    for i in range(3):
+        (archive/'pdf'/f'r{i}.pdf').write_bytes(b'%PDF-1.4 stub')
+    real_import = builtins.__import__
+
+    def blocked(name, *args, **kwargs):
+        if name == 'pdfplumber':
+            raise ImportError("No module named 'pdfplumber'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, '__import__', blocked)
+    with pytest.raises(RuntimeError, match='pdfplumber is required'):
+        parse_to_csv(archive, tmp_path/'out.csv')
+    assert not (tmp_path/'out.csv').exists()
