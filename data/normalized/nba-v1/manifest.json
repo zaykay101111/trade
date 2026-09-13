@@ -1,0 +1,14 @@
+{
+  "source": "nba_api ScheduleLeagueV2",
+  "seasons": [
+    "2020-21",
+    "2021-22",
+    "2022-23",
+    "2023-24",
+    "2024-25",
+    "2025-26"
+  ],
+  "rows": 4770,
+  "observed_lag_hours": 48,
+  "warning": "schedule_observed_at is reconstructed, not a provider revision timestamp"
+}

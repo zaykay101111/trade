@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "created_at": "2026-09-13T01:48:44.648287+00:00",
+  "mode": "synthetic",
+  "config": {
+    "schema_version": 1,
+    "mode": "synthetic",
+    "cutoff_minutes": 60,
+    "max_quote_age_minutes": 10,
+    "min_reference_books": 3,
+    "reference_books": [
+      "pinnacle",
+      "betfair_ex_eu",
+      "williamhill"
+    ],
+    "execution_books": [
+      "draftkings",
+      "fanduel"
+    ],
+    "contract": "nba_regular_fullgame_moneyline_ot",
+    "rolling_games": 10,
+    "min_history": 5,
+    "train_end": "2021-04-25T20:00:00+00:00",
+    "tune_end": "2021-10-22T20:00:00+00:00",
+    "calibration_end": "2022-04-20T20:00:00+00:00",
+    "validation_end": "2022-10-17T20:00:00+00:00",
+    "test_end": "2023-04-15T20:00:00+00:00",
+    "seed": 42,
+    "threads": 4,
+    "bootstrap_repeats": 200,
+    "block_days": 7,
+    "policy": {
+      "bankroll": 10000,
+      "cost_per_stake": 0.005,
+      "min_ev": 0.02,
+      "probability_haircut": 0.02,
+      "kelly_fraction": 0.25,
+      "max_game_fraction": 0.0025,
+      "max_open_fraction": 0.01,
+      "max_daily_fraction": 0.01,
+      "stake_increment": 1
+    },
+    "grid": [
+      {
+        "max_depth": 2,
+        "n_estimators": 30,
+        "learning_rate": 0.05
+      },
+      {
+        "max_depth": 3,
+        "n_estimators": 30,
+        "learning_rate": 0.05
+      }
+    ]
+  },
+  "features": [
+    "margin_diff",
+    "points_for_diff",
+    "points_against_diff",
+    "rest_diff",
+    "home_back_to_back",
+    "away_back_to_back",
+    "home_history",
+    "away_history",
+    "home_win_rate",
+    "away_win_rate",
+    "reference_dispersion",
+    "reference_age_minutes"
+  ],
+  "logistic": {
+    "mean": [
+      0.25111123789238804,
+      0.06719090724681763,
+      -0.18392033064556992,
+      -0.036741214057507986,
+      0.16773162939297126,
+      0.2012779552715655,
+      9.915335463258787,
+      9.936102236421725,
+      0.5040855266494243,
+      0.494782950453877,
+      0.005448913795749192,
+      2.0
+    ],
+    "scale": [
+      8.202609423934609,
+      5.677955623535167,
+      6.119355992555431,
+      5.471995937503846,
+      0.3736277959335335,
+      0.4009552842815058,
+      0.518834986960627,
+      0.46514982549146766,
+      0.2410197880145164,
+      0.23539324988933108,
+      0.0031227133240283767,
+      1.0
+    ],
+    "coef": [
+      -0.04881108703683762,
+      -0.0064531778571123586,
+      -0.026026229273741142,
+      -0.015498833124687446,
+      0.1114084591638976,
+      -0.04253057030414903,
+      -0.07238652824298236,
+      -0.01670143031604466,
+      0.036222708851541864,
+      0.017614394640675254,
+      0.020398705820908452,
+      -0.06206503029193468,
+      0.0
+    ]
+  },
+  "calibrators": {
+    "market": {
+      "intercept": 0.07844933694685434,
+      "slope": 0.80998538854075
+    },
+    "logistic": {
+      "intercept": 0.12481592890574374,
+      "slope": 0.7861537140271418
+    },
+    "residual": {
+      "intercept": 0.10207234048463401,
+      "slope": 0.7700052991880413
+    }
+  },
+  "split_counts": {
+    "train": 447,
+    "tune": 179,
+    "calibration": 179
+  },
+  "selected_params": {
+    "max_depth": 2,
+    "n_estimators": 30,
+    "learning_rate": 0.05
+  },
+  "dataset_sha256": "4f62ce10593893f0bbb31da9972fab3bf53aa59892312672f71c3a479f0418f8",
+  "code_sha256": "9c4ec5f482ce2fcff229abc644cae64ad7eea0ca28473ad8816fb14991555366",
+  "versions": {
+    "python": "3.12.14",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scipy": "1.18.1",
+    "sklearn": "1.9.1",
+    "xgboost": "3.4.1"
+  }
+}

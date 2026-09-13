@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "mode": "synthetic",
+  "games": 1200,
+  "eligible": 1167,
+  "excluded": 33,
+  "exclusion_reasons": {
+    "insufficient_prior_games": 33
+  },
+  "features": [
+    "margin_diff",
+    "points_for_diff",
+    "points_against_diff",
+    "rest_diff",
+    "home_back_to_back",
+    "away_back_to_back",
+    "home_history",
+    "away_history",
+    "home_win_rate",
+    "away_win_rate",
+    "reference_dispersion",
+    "reference_age_minutes"
+  ],
+  "input_hashes": {
+    "games": "1ca950616e854c2889fbb7e45c256f7e60881447000900441600ecdbb8ab0304",
+    "results": "f026a8de36c73c736c3c1da8824dc6755bdc97fcd65d010ac9f7b1fa1a0a83ab",
+    "odds": "d80f26326b3f33c24b3f9fb653e98040a25c8c4901bf0b204f8a270ae08d5008"
+  },
+  "features_sha256": "4f62ce10593893f0bbb31da9972fab3bf53aa59892312672f71c3a479f0418f8",
+  "config": {
+    "schema_version": 1,
+    "mode": "synthetic",
+    "cutoff_minutes": 60,
+    "max_quote_age_minutes": 10,
+    "min_reference_books": 3,
+    "reference_books": [
+      "pinnacle",
+      "betfair_ex_eu",
+      "williamhill"
+    ],
+    "execution_books": [
+      "draftkings",
+      "fanduel"
+    ],
+    "contract": "nba_regular_fullgame_moneyline_ot",
+    "rolling_games": 10,
+    "min_history": 5,
+    "train_end": "2021-04-25T20:00:00+00:00",
+    "tune_end": "2021-10-22T20:00:00+00:00",
+    "calibration_end": "2022-04-20T20:00:00+00:00",
+    "validation_end": "2022-10-17T20:00:00+00:00",
+    "test_end": "2023-04-15T20:00:00+00:00",
+    "seed": 42,
+    "threads": 4,
+    "bootstrap_repeats": 200,
+    "block_days": 7,
+    "policy": {
+      "bankroll": 10000,
+      "cost_per_stake": 0.005,
+      "min_ev": 0.02,
+      "probability_haircut": 0.02,
+      "kelly_fraction": 0.25,
+      "max_game_fraction": 0.0025,
+      "max_open_fraction": 0.01,
+      "max_daily_fraction": 0.01,
+      "stake_increment": 1
+    },
+    "grid": [
+      {
+        "max_depth": 2,
+        "n_estimators": 30,
+        "learning_rate": 0.05
+      },
+      {
+        "max_depth": 3,
+        "n_estimators": 30,
+        "learning_rate": 0.05
+      }
+    ]
+  },
+  "lineage_limit": "Timestamp assertions validate declared availability; archive provenance must be audited separately."
+}

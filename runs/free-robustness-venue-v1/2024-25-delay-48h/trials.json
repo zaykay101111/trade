@@ -1,0 +1,66 @@
+[
+  {
+    "params": {
+      "max_depth": 2,
+      "n_estimators": 100,
+      "learning_rate": 0.03,
+      "reg_lambda": 10,
+      "min_child_weight": 20,
+      "tree_method": "hist",
+      "objective": "binary:logistic",
+      "eval_metric": "logloss",
+      "n_jobs": 2,
+      "random_state": 42,
+      "base_score": 0.5
+    },
+    "tune_log_loss": 0.6169154047966003
+  },
+  {
+    "params": {
+      "max_depth": 2,
+      "n_estimators": 250,
+      "learning_rate": 0.03,
+      "reg_lambda": 10,
+      "min_child_weight": 20,
+      "tree_method": "hist",
+      "objective": "binary:logistic",
+      "eval_metric": "logloss",
+      "n_jobs": 2,
+      "random_state": 42,
+      "base_score": 0.5
+    },
+    "tune_log_loss": 0.6129527688026428
+  },
+  {
+    "params": {
+      "max_depth": 3,
+      "n_estimators": 100,
+      "learning_rate": 0.03,
+      "reg_lambda": 10,
+      "min_child_weight": 20,
+      "tree_method": "hist",
+      "objective": "binary:logistic",
+      "eval_metric": "logloss",
+      "n_jobs": 2,
+      "random_state": 42,
+      "base_score": 0.5
+    },
+    "tune_log_loss": 0.619477391242981
+  },
+  {
+    "params": {
+      "max_depth": 3,
+      "n_estimators": 250,
+      "learning_rate": 0.03,
+      "reg_lambda": 10,
+      "min_child_weight": 20,
+      "tree_method": "hist",
+      "objective": "binary:logistic",
+      "eval_metric": "logloss",
+      "n_jobs": 2,
+      "random_state": 42,
+      "base_score": 0.5
+    },
+    "tune_log_loss": 0.614392101764679
+  }
+]

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "mode": "historical_reconstructed",
+  "cutoff_minutes": 60,
+  "max_quote_age_minutes": 10,
+  "min_reference_books": 3,
+  "reference_books": [
+    "pinnacle",
+    "betfair_ex_eu",
+    "williamhill"
+  ],
+  "execution_books": [
+    "draftkings",
+    "fanduel"
+  ],
+  "contract": "nba_regular_fullgame_moneyline_ot",
+  "rolling_games": 10,
+  "min_history": 5,
+  "train_end": "2023-07-01T00:00:00Z",
+  "tune_end": "2024-01-01T00:00:00Z",
+  "calibration_end": "2024-07-01T00:00:00Z",
+  "validation_end": "2025-07-01T00:00:00Z",
+  "test_end": "2026-07-01T00:00:00Z",
+  "seed": 42,
+  "threads": 4,
+  "bootstrap_repeats": 2000,
+  "block_days": 7,
+  "policy": {
+    "bankroll": 10000,
+    "cost_per_stake": 0.005,
+    "min_ev": 0.02,
+    "probability_haircut": 0.02,
+    "kelly_fraction": 0.25,
+    "max_game_fraction": 0.0025,
+    "max_open_fraction": 0.01,
+    "max_daily_fraction": 0.01,
+    "stake_increment": 1
+  },
+  "grid": [
+    {
+      "max_depth": 2,
+      "n_estimators": 100,
+      "learning_rate": 0.03
+    },
+    {
+      "max_depth": 2,
+      "n_estimators": 250,
+      "learning_rate": 0.03
+    },
+    {
+      "max_depth": 3,
+      "n_estimators": 100,
+      "learning_rate": 0.03
+    },
+    {
+      "max_depth": 3,
+      "n_estimators": 250,
+      "learning_rate": 0.03
+    }
+  ]
+}
+

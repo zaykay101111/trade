@@ -1,0 +1,49 @@
+# ---- Python ----
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ---- macOS ----
+.DS_Store
+._*
+
+# ---- Secrets: never commit provider keys ----
+.env
+.env.*
+*.pem
+*.key
+api_keys.json
+
+# ---- Logs ----
+/logs/*
+!/logs/.gitkeep
+
+# ---- Data: heavy CSV/JSON stays local, provenance manifests are tracked ----
+/data/raw/**
+/data/processed/**
+/data/normalized/**
+!/data/raw/.gitkeep
+!/data/processed/.gitkeep
+!/data/normalized/.gitkeep
+!/data/normalized/**/
+!/data/normalized/**/manifest.json
+!/data/normalized/**/upstream_manifest.json
+
+# ---- Runs: predictions/features stay local, reports and provenance are tracked ----
+/runs/**
+!/runs/.gitkeep
+!/runs/**/
+!/runs/**/report.json
+!/runs/**/PASTE_BACK.md
+!/runs/**/bundle.json
+!/runs/**/trials.json
+!/runs/**/freeze.json
+!/runs/**/audit.json
+!/runs/**/TEST_CONSUMED.json
+!/runs/**/HOLDOUT_CONSUMED.json

@@ -1,0 +1,68 @@
+{
+  "created_at": "2026-09-13T05:05:00.233862+00:00",
+  "source_dataset": "/Users/kylerzook2005/Documents/Personal Projects/Sports Betting Method/data/normalized/nba-v2",
+  "rows": 7230,
+  "corrections": [
+    {
+      "game_id": "0022200439",
+      "before": false,
+      "after": true,
+      "arena_city": "Mexico City, Mexico",
+      "arena_name": "Mexico City Arena",
+      "source": "https://pr.nba.com/nba-mexico-city-game-to-return-with-regular-season-matchup-featuring-san-antonio-spurs-and-miami-heat-on-dec-17/"
+    },
+    {
+      "game_id": "0022200678",
+      "before": false,
+      "after": true,
+      "arena_city": "Paris",
+      "arena_name": "Accor Arena",
+      "source": "https://www.nba.com/news/bulls-pistons-to-play-regular-season-game-in-paris"
+    },
+    {
+      "game_id": "0022300172",
+      "before": false,
+      "after": true,
+      "arena_city": "Mexico City",
+      "arena_name": "Arena CDMX",
+      "source": "https://www.nba.com/game/atl-vs-orl-0022300172"
+    },
+    {
+      "game_id": "0022301229",
+      "before": false,
+      "after": true,
+      "arena_city": "Las Vegas",
+      "arena_name": "T-Mobile Arena",
+      "source": "https://www.nba.com/news/2023-in-season-tournament-debut-official-release"
+    },
+    {
+      "game_id": "0022301230",
+      "before": false,
+      "after": true,
+      "arena_city": "Las Vegas",
+      "arena_name": "T-Mobile Arena",
+      "source": "https://www.nba.com/news/2023-in-season-tournament-debut-official-release"
+    },
+    {
+      "game_id": "0022300527",
+      "before": false,
+      "after": true,
+      "arena_city": "Paris",
+      "arena_name": "Accor Arena",
+      "source": "https://www.nba.com/cavaliers/photos/photogallery-bkncle-240111"
+    }
+  ],
+  "source_sha256": {
+    "games.csv": "484d7199c0c8a2ca521655ea25b30ea7b81564ef6659f1b2eba2d989f6fed5a4",
+    "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2"
+  },
+  "reviewed_raw_sha256": {
+    "schedule-2022-23.json": "473d2b8e96f01bbbe6ac82e6c6e24840fe5521b5adecac9e83f1c581617404fc",
+    "schedule-2023-24.json": "761a64acb5f9b1ddd5ee9adf9d166405d82ddffe1ea9a63bff8ea632f946f329"
+  },
+  "output_sha256": {
+    "games.csv": "32d3037da5088ea9a726a2fc561b7fcb8a2230bef3007742f3602449df691d73",
+    "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2"
+  },
+  "warning": "Venue-only overrides; no score or timestamp revisions. International and Cup semifinal venues treated as neutral. Austin regional home games and temporary home bases retain source flags. Not an exhaustive venue/home-advantage model. Final holdout rows unchanged and unscored."
+}

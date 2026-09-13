@@ -1,0 +1,18 @@
+{
+  "frozen_at": "2026-09-13T01:48:46.755727+00:00",
+  "code_sha256": "9c4ec5f482ce2fcff229abc644cae64ad7eea0ca28473ad8816fb14991555366",
+  "bundle_sha256": "d789f2e805aa389d05f5ba11674bc33fbcb72a076cd012d247f9d39d29578d54",
+  "model_sha256": "61867e6e0abbc47acf2028fff743f9e92a4bd9a5ea65d5ecde69360ad1df8dc5",
+  "policy": {
+    "bankroll": 10000,
+    "cost_per_stake": 0.005,
+    "min_ev": 0.02,
+    "probability_haircut": 0.02,
+    "kelly_fraction": 0.25,
+    "max_game_fraction": 0.0025,
+    "max_open_fraction": 0.01,
+    "max_daily_fraction": 0.01,
+    "stake_increment": 1
+  },
+  "note": "Local tamper detection, not an independent preregistration service."
+}
