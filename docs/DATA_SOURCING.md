@@ -76,6 +76,26 @@ edge question instead of a twelve-month wait.
 Trade-off inside the same budget: two regions at T-60, or one region at T-60 plus
 a closing snapshot for comparison. Both fit; doing all three does not.
 
+### Correction: costed against the existing plan file
+
+The figures above assume one snapshot per tip time and one region. The project's
+own `data/odds-plan.json` is more ambitious: 5,918 planned timestamps (paired
+snapshots five minutes apart, for the same-book stress test) across regions
+`us,uk,eu` - a 3x multiplier. Costed properly:
+
+| Scope | Credits | Cheapest tier that fits |
+|---|---|---|
+| us only, paired snapshots | 59,180 | 100k, $59 |
+| us + us2, paired snapshots | 118,360 | 5M, $119 |
+| us,uk,eu as already planned | 177,540 | 5M, $119 |
+
+So the existing plan, executed in full at 5-minute paired resolution across three
+regions, is **$119 for one month**, not $59. Both numbers are one-off: the data
+may be retained after cancelling. The $59 option buys US books only and drops the
+paired-snapshot stress test; the $119 option buys the plan as designed. Neither
+is authorized, and neither should be bought before the free prospective collector
+proves the storage format.
+
 ### Historical closing odds — free but provenance-poor
 sportsbookreviewsonline.com publishes season archives for 2007-08 through
 2022-23 (moneyline, opening and closing spreads/totals). Free, no timestamps, one
