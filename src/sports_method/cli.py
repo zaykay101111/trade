@@ -7,6 +7,12 @@ from .io import read_json
 def main():
     parser=argparse.ArgumentParser(description="NBA first-model research and paper monitoring")
     sub=parser.add_subparsers(dest="command",required=True)
+    p=sub.add_parser("replicate-external", help="Apply the frozen recipe to another era, e.g. published-paper seasons")
+    p.add_argument("--data", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--threads", type=int, default=2)
+    p.add_argument("--label", default="external era")
+    p.add_argument("--start");p.add_argument("--train-end");p.add_argument("--tune-end")
+    p.add_argument("--calibration-end");p.add_argument("--evaluation-end")
     p=sub.add_parser("freeze-final", help="Pre-register the one-use odds-free final-holdout protocol")
     p.add_argument("--data", required=True);p.add_argument("--out", required=True)
     p=sub.add_parser("evaluate-final", help="Score the reserved 2025-26 holdout once against a freeze record")
@@ -48,6 +54,14 @@ def main():
         print("ERROR: "+str(exc),file=sys.stderr);raise SystemExit(2)
 
 def dispatch(a):
+    if a.command=="replicate-external":
+        from .free_external import replicate_external, PAPER_ERA
+        keys=[("start","start"),("train","train_end"),("tune","tune_end"),
+              ("calibration","calibration_end"),("evaluation","evaluation_end")]
+        given={k:getattr(a,attr) for k,attr in keys if getattr(a,attr)}
+        if given and len(given)!=5:
+            raise ValueError("Provide all five era boundaries or none")
+        return replicate_external(a.data, a.out, given or PAPER_ERA, a.threads, a.label)
     if a.command=="freeze-final":
         from .free_final import freeze_final
         return freeze_final(a.data, a.out)
