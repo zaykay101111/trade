@@ -7,6 +7,23 @@ from .io import read_json
 def main():
     parser=argparse.ArgumentParser(description="NBA first-model research and paper monitoring")
     sub=parser.add_subparsers(dest="command",required=True)
+    p=sub.add_parser("freeze-release", help="Fit the frozen recipe for prospective deployment; scores nothing")
+    p.add_argument("--data", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--train-end", required=True);p.add_argument("--tune-end", required=True)
+    p.add_argument("--calibration-end", required=True)
+    p.add_argument("--threads", type=int, default=2);p.add_argument("--label", default="release")
+    p=sub.add_parser("collect-init", help="Create a prospective T-60 collection directory from a season schedule")
+    p.add_argument("--schedule", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--season", required=True)
+    p=sub.add_parser("collect-poll", help="One collection cycle: forecast pending games and record live quotes")
+    p.add_argument("--collection", required=True);p.add_argument("--bundle", required=True)
+    p.add_argument("--data", required=True);p.add_argument("--at")
+    p.add_argument("--regions", default="us");p.add_argument("--execution-book", default="draftkings")
+    p.add_argument("--window-minutes", type=float, default=5)
+    p.add_argument("--execute", action="store_true", help="Required to make the request; otherwise dry run")
+    p.add_argument("--allow-code-drift", action="store_true", help="Record and permit source drift from the bundle")
+    p=sub.add_parser("collect-status", help="Coverage and quota summary for a collection")
+    p.add_argument("--collection", required=True)
     p=sub.add_parser("replicate-external", help="Apply the frozen recipe to another era, e.g. published-paper seasons")
     p.add_argument("--data", required=True);p.add_argument("--out", required=True)
     p.add_argument("--threads", type=int, default=2)
@@ -54,6 +71,21 @@ def main():
         print("ERROR: "+str(exc),file=sys.stderr);raise SystemExit(2)
 
 def dispatch(a):
+    if a.command=="freeze-release":
+        from .collect import release
+        return release(a.data, a.out, train_end=a.train_end, tune_end=a.tune_end,
+                       calibration_end=a.calibration_end, threads=a.threads, label=a.label)
+    if a.command=="collect-init":
+        from .collect import initialise
+        return initialise(a.schedule, a.out, a.season)
+    if a.command=="collect-poll":
+        from .collect import poll
+        return poll(a.collection, a.bundle, a.data, at=a.at, regions=a.regions,
+                    execution_book=a.execution_book, execute=a.execute,
+                    window_minutes=a.window_minutes, allow_code_drift=a.allow_code_drift)
+    if a.command=="collect-status":
+        from .collect import status
+        return status(a.collection)
     if a.command=="replicate-external":
         from .free_external import replicate_external, PAPER_ERA
         keys=[("start","start"),("train","train_end"),("tune","tune_end"),
