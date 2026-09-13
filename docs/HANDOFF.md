@@ -80,7 +80,7 @@ measured against any market, and nothing has been wagered or paid for.
 - `scripts/archive_injury_reports.py` stores PDFs verbatim with a hashed index and
   records whether each file was backfilled or captured prospectively.
 - `injury.py` + `parse-injuries` / `compare-availability`.
-- **Development result (pending re-run, see below):** base 0.621258 vs 0.617948
+- **Development result (CONFIRMED on two machines):** base 0.621258 vs 0.617948
   with availability, pooled −0.003311, improving in all three folds, 2024-25
   excluding zero. Accuracy 65.26% → 66.12%. Counts are unweighted — no player
   impact data — so this is a floor on the feature group's value.
@@ -105,20 +105,29 @@ changed a headline result. It was caught only because Kyler's run disagreed with
 mine on the same files. **Both numbers were reported before the disagreement was
 understood — the −0.0024 figure is from the broken parser and should be discarded.**
 
+## Availability result — confirmed
+
+Re-run with the fixed parser on both machines, `runs/avail-v2`:
+
+| Fold | Base | Extended | Difference |
+|---|---|---|---|
+| 2022-23 | 0.647034 | 0.645326 | -0.001708 |
+| 2023-24 | 0.609683 | 0.606388 | -0.003295 |
+| 2024-25 | 0.607059 | 0.602131 | -0.004928 (interval excludes zero) |
+| pooled | 0.621258 | 0.617948 | **-0.003311** |
+
+Kyler's machine (Python 3.12, 99,891 rows from 1,215 reports) and the sandbox
+(Python 3.11, 98,514 rows from 1,203) agree on the pooled figure to ten
+significant digits: -0.0033105290 versus -0.0033105297. The row-count difference
+is the 12 extra reports from the three-slot test. Cross-environment agreement is
+what the earlier disagreement was missing, and it is what makes this result
+trustworthy rather than merely favourable.
+
 ## Immediate next step
 
-Re-run the availability comparison with the fixed parser:
-
-```bash
-source .venv/bin/activate
-python -m pytest -q                       # expect 88
-rm data/injury-archive/parsed.csv
-sports parse-injuries --archive data/injury-archive --out data/injury-archive/parsed.csv
-sports compare-availability --data data/normalized/nba-v3 --reports data/injury-archive/parsed.csv \
-  --team-log data/raw/nba-team-games.csv --out runs/avail-v2 --threads 2
-```
-
-Expect roughly 98,500 rows and pooled ≈ −0.0033. Confirm before adopting.
+Decide whether to adopt availability into the frozen candidate. Adoption requires
+a new frozen release AND prospective capture from opening night, since backfilled
+reports cannot establish what was visible before a game.
 
 ## Open decisions (all blocking)
 

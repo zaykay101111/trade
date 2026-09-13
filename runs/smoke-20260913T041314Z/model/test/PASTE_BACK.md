@@ -63,7 +63,7 @@ Status: synthetic; paper evaluation; no execution claim.
       "mean_p": 0.16574053231400362,
       "observed": 0.1111111111111111
     },
-    {
+    { b
       "lower": 0.2,
       "n": 11,
       "mean_p": 0.25630744383645837,
