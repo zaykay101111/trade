@@ -1,0 +1,9 @@
+{
+  "started_at": "2026-09-13T05:34:53.629383+00:00",
+  "code_sha256": "13a835fd5f0dded149732a105e2a8f369b9b210ac8709e673b23c1271fb745a6",
+  "data_sha256": {
+    "games.csv": "32d3037da5088ea9a726a2fc561b7fcb8a2230bef3007742f3602449df691d73",
+    "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2",
+    "manifest.json": "4abaa63ebf6c6df0878974701f432646e9a212dc76ac121a5a1df318c72f2bf0"
+  }
+}
