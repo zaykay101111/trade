@@ -1,0 +1,13 @@
+{
+  "source": "nba_api ScheduleLeagueV2",
+  "seasons": [
+    "2014-15",
+    "2015-16",
+    "2016-17",
+    "2017-18",
+    "2018-19"
+  ],
+  "rows": 6150,
+  "observed_lag_hours": 48,
+  "warning": "schedule_observed_at is reconstructed, not a provider revision timestamp"
+}

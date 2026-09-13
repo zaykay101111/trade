@@ -34,6 +34,7 @@ api_keys.json
 !/data/normalized/**/
 !/data/normalized/**/manifest.json
 !/data/normalized/**/upstream_manifest.json
+!/data/normalized/**/results_manifest.json
 
 # ---- Runs: predictions/features stay local, reports and provenance are tracked ----
 /runs/**

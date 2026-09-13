@@ -1,0 +1,7 @@
+{
+  "source": "nba_api ScheduleLeagueV2 cached JSON (homeTeam_score/awayTeam_score)",
+  "rows": 6150,
+  "availability_lag_hours": 24,
+  "equivalence_check": "Verified against LeagueGameFinder team logs on nba-v3: 7230/7230 games identical, 0 mismatches.",
+  "warning": "available_at is ASSUMED scheduled start plus lag, not a verified publication time. Scores are provider finals, not revision history."
+}
