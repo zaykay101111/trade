@@ -12,6 +12,20 @@ import json
 import re
 from pathlib import Path
 import pandas as pd
+from .io import digest, write_json, now
+
+PARSER_VERSION = "game-scoped-v3"
+MAX_REPORT_AGE_HOURS = 48
+TEAMS = ("Atlanta Hawks", "Boston Celtics", "Brooklyn Nets", "Charlotte Hornets",
+         "Chicago Bulls", "Cleveland Cavaliers", "Dallas Mavericks", "Denver Nuggets",
+         "Detroit Pistons", "Golden State Warriors", "Houston Rockets", "Indiana Pacers",
+         "LA Clippers", "Los Angeles Clippers", "Los Angeles Lakers", "Memphis Grizzlies",
+         "Miami Heat", "Milwaukee Bucks", "Minnesota Timberwolves", "New Orleans Pelicans",
+         "New York Knicks", "Oklahoma City Thunder", "Orlando Magic", "Philadelphia 76ers",
+         "Phoenix Suns", "Portland Trail Blazers", "Sacramento Kings", "San Antonio Spurs",
+         "Toronto Raptors", "Utah Jazz", "Washington Wizards", "Non-NBA Team")
+TEAM_PREFIX = re.compile(r"^(" + "|".join(r"\s*".join(map(re.escape,t.split())) for t in TEAMS) + r")(?=\s|$)")
+PLAYER_ROW = re.compile(r"^(?P<player>[^,]+,\s*.+?)\s+(?P<status>" + "|".join(("Out", "Doubtful", "Questionable", "Probable", "Available")) + r")\b")
 
 STATUSES = ("Out", "Doubtful", "Questionable", "Probable", "Available")
 COUNTED = STATUSES+("NotSubmitted",)
@@ -66,22 +80,28 @@ def parse_lines(lines):
         if not line or line.startswith(("Game Date", "GameDate", "Injury Report:")) \
                 or re.match(r"^Page\s*\d+\s*of\s*\d+$", line):
             continue
-        blank = NOT_SUBMITTED.match(line)
-        if blank:
-            _prefix_fields(blank.group("prefix"), current)
-            rows.append({"game_date": current["date"], "game_time_et": current["time"],
-                         "matchup": current["matchup"], "team": current["team"],
-                         "player": None, "status": "NotSubmitted"})
-            continue
-        match = ROW.match(line)
-        if not match:
-            continue
-        _prefix_fields(match.group("prefix"), current)
-        if not current["matchup"]:
+        # Consume structural headers even when the player is on the next line.
+        for key, pattern in (("date", r"^(\d{2}/\d{2}/\d{4})\s*"),
+                             ("time", r"^(\d{1,2}:\d{2})\s*\(ET\)\s*"),
+                             ("matchup", r"^([A-Z]{3}@[A-Z]{3})\s*")):
+            token = re.match(pattern, line)
+            if token:
+                if key == 'matchup' and token.group(1) != current[key]:
+                    current['team'] = None
+                current[key] = token.group(1)
+                line = line[token.end():].strip()
+        team = TEAM_PREFIX.match(line)
+        if team:
+            current['team'] = team.group(1)
+            line = line[team.end():].strip()
+        blank = re.fullmatch(r"NOT\s*YET\s*SUBMITTED", line, re.I)
+        match = PLAYER_ROW.match(line)
+        if not current['matchup'] or not current['team'] or not (blank or match):
             continue
         rows.append({"game_date": current["date"], "game_time_et": current["time"],
                      "matchup": current["matchup"], "team": current["team"],
-                     "player": match.group("player").strip(), "status": match.group("status")})
+                     "player": None if blank else match.group("player").strip(),
+                     "status": "NotSubmitted" if blank else match.group("status")})
     return rows
 
 
@@ -99,6 +119,8 @@ def parse_report(pdf_path):
     # break, so parsing page by page would drop every row before the next time
     # the matchup is printed.
     rows = parse_lines(lines)
+    if stamp is None:
+        raise ValueError(f"Missing report timestamp: {pdf_path}")
     frame = pd.DataFrame(rows)
     if not frame.empty:
         frame["team"] = frame.team.astype(str).str.replace(" ", "", regex=False)
@@ -151,32 +173,70 @@ def availability_counts(games, reports, lookup):
     """
     if reports.empty:
         raise ValueError("No parsed injury rows supplied")
-    reports = reports.dropna(subset=["report_at"]).copy()
+    required = {'game_date', 'matchup', 'team', 'status', 'report_at'}
+    if not required.issubset(reports.columns):
+        raise ValueError(f"Missing report identity fields: {sorted(required-set(reports.columns))}")
+    reports = reports.copy()
     reports["team_id"] = reports.team.map(lookup)
     unmapped = reports.team_id.isna().sum()
-    reports = reports.dropna(subset=["team_id"])
-    reports["report_at"] = pd.to_datetime(reports.report_at, utc=True)
+    reports["report_at"] = pd.to_datetime(reports.report_at, utc=True, format='mixed', errors='coerce')
+    reports['date'] = pd.to_datetime(reports.game_date, format='%m/%d/%Y', errors='coerce').dt.strftime('%Y-%m-%d')
+    pairs = reports.matchup.fillna('').str.split('@')
+    reports['away'] = pairs.map(lambda p: lookup.get(p[0]) if len(p)==2 else None)
+    reports['home'] = pairs.map(lambda p: lookup.get(p[1]) if len(p)==2 else None)
+    good = (reports[['team_id','date','home','away','report_at']].notna().all(axis=1)
+            & ((reports.team_id==reports.home)|(reports.team_id==reports.away))
+            & reports.status.isin(COUNTED))
+    rejected = reports[~good].copy()
+    rejected['rejection_reason'] = 'invalid/missing team, date, matchup, timestamp or status'
+    reports = reports[good].copy()
+    if 'source' not in reports:
+        reports['source'] = 'unspecified'
     output = []
-    by_team = {team: frame.sort_values("report_at") for team, frame in reports.groupby("team_id")}
+    by_team = {key: frame.sort_values("report_at") for key, frame in reports.groupby(['team_id','date','home','away'])}
     for game in games.itertuples():
-        row = {"game_id": game.game_id}
-        covered = True
+        row = {"game_id": game.game_id, 'decision_at': game.decision_at,
+               'scheduled_at': game.scheduled_at, 'home_id': str(game.home_id), 'away_id': str(game.away_id)}
+        states = []
         for side, team in (("home", game.home_id), ("away", game.away_id)):
-            frame = by_team.get(str(team))
+            date = game.scheduled_at.tz_convert('America/New_York').strftime('%Y-%m-%d')
+            frame = by_team.get((str(team), date, str(game.home_id), str(game.away_id)))
             usable = frame[frame.report_at < game.decision_at] if frame is not None else None
+            for status in COUNTED:
+                row[f'{side}_{status.lower()}'] = 0
+            for key in ('source','report_at','age_hours','capture','retrieved_at','pdf_sha256','parser_version','game_date','matchup','source_url'):
+                row[f'{side}_{key}'] = None
             if usable is None or usable.empty:
-                covered = False
-                for status in COUNTED:
-                    row[f"{side}_{status.lower()}"] = 0
+                row[f'{side}_state'] = 'missing'
+                states.append('missing')
                 continue
             latest = usable[usable.report_at == usable.report_at.max()]
-            counts = latest.status.value_counts()
-            for status in COUNTED:
-                row[f"{side}_{status.lower()}"] = int(counts.get(status, 0))
-        row["availability_covered"] = covered
+            age = (game.decision_at-latest.report_at.iloc[0]).total_seconds()/3600
+            for key in ('source','report_at','capture','retrieved_at','pdf_sha256','parser_version','game_date','matchup','source_url'):
+                row[f'{side}_{key}'] = str(latest.iloc[0][key]) if key in latest else None
+            row[f'{side}_age_hours'] = age
+            # Never add two files together or count conflicting player rows twice.
+            player_rows = latest[latest.player.notna()] if 'player' in latest else latest
+            conflict = ('player' in player_rows and player_rows.duplicated(['player'], keep=False).any())
+            if latest.source.nunique()!=1 or conflict:
+                state = 'invalid'
+            elif age > MAX_REPORT_AGE_HOURS:
+                state = 'stale'
+            elif latest.status.eq('NotSubmitted').any():
+                state = 'not_submitted'
+                row[f'{side}_notsubmitted'] = 1
+            else:
+                state = 'usable'
+                counts = latest.status.value_counts()
+                for status in STATUSES:
+                    row[f'{side}_{status.lower()}'] = int(counts.get(status,0))
+            row[f'{side}_state'] = state
+            states.append(state)
+        row["availability_covered"] = all(s=='usable' for s in states)
         output.append(row)
     frame = pd.DataFrame(output)
     frame.attrs["unmapped_team_rows"] = int(unmapped)
+    frame.attrs['rejected_rows'] = rejected
     return frame
 
 
@@ -196,16 +256,48 @@ def parse_to_csv(archive, out, limit=None, time_budget=None, chunk=50):
         raise RuntimeError("pdfplumber is required to parse injury reports; install it with "
                            "python -m pip install -e '.[pdf]'") from exc
     archive, out = Path(archive), Path(out)
+    sidecar = out.with_suffix(out.suffix+'.manifest.json')
+    parser_hash = digest(Path(__file__))
+    index_path = archive/'index.jsonl'
+    index_hash = digest(index_path) if index_path.exists() else None
+    records = {}
+    if index_path.exists():
+        for line in index_path.read_text().splitlines():
+            if line.strip():
+                record = json.loads(line); records[record['filename']] = record
     pdfs = sorted((archive/"pdf").glob("*.pdf"))
     if not pdfs:
         raise ValueError(f"No PDFs under {archive/'pdf'}")
     done = set()
+    pdf_hashes = {p.name:digest(p) for p in pdfs}
+    for name, record in records.items():
+        if name in pdf_hashes and pdf_hashes[name] != record['sha256']:
+            raise ValueError(f'Archive PDF hash mismatch: {name}')
     if out.exists():
+        if not sidecar.exists():
+            raise ValueError('Legacy parsed CSV has no manifest; use a NEW output path')
+        previous = json.loads(sidecar.read_text())
+        if (previous['parser_sha256'] != parser_hash or previous['index_sha256'] != index_hash
+                or previous['csv_sha256'] != digest(out)):
+            raise ValueError('Parser, archive index, or parsed CSV changed; use a NEW output path')
+        if previous['pdf_sha256'] != pdf_hashes:
+            raise ValueError('Archive PDFs changed; use a NEW output path')
         done = set(pd.read_csv(out, usecols=["source"]).source.unique())
     todo = [p for p in pdfs if p.name not in done]
     if limit:
         todo = todo[:limit]
     started, buffer, failures, parsed = time.time(), [], [], 0
+    def flush():
+        if not buffer:
+            return
+        out.parent.mkdir(parents=True, exist_ok=True)
+        pd.concat(buffer).to_csv(out, mode='a', header=not out.exists(), index=False)
+        write_json(sidecar, {'parser_version': PARSER_VERSION, 'parser_sha256': parser_hash,
+                            'index_sha256': index_hash, 'pdf_sha256': pdf_hashes,
+                            'csv_sha256': digest(out), 'updated_at': now(),
+                            'pdfplumber_version': pdfplumber.__version__,
+                            'note': 'Backfilled timestamps are nominal report times, not verified publication times.'})
+        buffer.clear()
     for path in todo:
         try:
             frame = parse_report(path)
@@ -215,23 +307,31 @@ def parse_to_csv(archive, out, limit=None, time_budget=None, chunk=50):
             failures.append({"source": path.name, "error": str(exc)[:200]})
             continue
         if not frame.empty:
+            record = records.get(path.name, {})
+            frame['pdf_sha256'] = pdf_hashes[path.name]
+            frame['parser_version'] = PARSER_VERSION
+            frame['capture'] = record.get('capture','unknown')
+            frame['retrieved_at'] = record.get('retrieved_at','')
+            frame['source_url'] = record.get('url','')
             buffer.append(frame)
             parsed += 1
+        else:
+            failures.append({'source':path.name, 'error':'No rows parsed; requires review'})
         if len(buffer) >= chunk:
-            pd.concat(buffer).to_csv(out, mode="a", header=not out.exists(), index=False)
-            buffer = []
+            flush()
         if time_budget and time.time()-started > time_budget:
             break
     if buffer:
-        pd.concat(buffer).to_csv(out, mode="a", header=not out.exists(), index=False)
+        flush()
     total = pd.read_csv(out, usecols=["source"]) if out.exists() else pd.DataFrame(columns=["source"])
     return {"parsed_now": parsed, "already_parsed": len(done), "remaining": len(pdfs)-len(done)-parsed,
             "reports_in_csv": int(total.source.nunique()), "rows_in_csv": len(total),
             "failures": failures, "out": str(out),
-            "note": "Rerun to continue; parsed reports are never reparsed. Delete the CSV to reparse all."}
+            "note": "Rerun to continue only with matching provenance. Use a NEW CSV path after parser/archive changes."}
 
 AVAILABILITY_FEATURES = ["out_diff", "doubtful_diff", "questionable_diff", "probable_diff",
-                         "not_submitted_diff", "availability_covered"]
+                         "not_submitted_diff", "availability_covered"] + [
+    f'{side}_{state}' for side in ('home','away') for state in ('missing','stale','not_submitted','invalid')]
 
 
 def availability_frame(games, reports, lookup):
@@ -250,8 +350,13 @@ def availability_frame(games, reports, lookup):
             continue
         frame[name] = counts[f"home_{key}"]-counts[f"away_{key}"]
     frame["availability_covered"] = counts.availability_covered.astype(int)
+    for side in ('home','away'):
+        for state in ('missing','stale','not_submitted','invalid'):
+            frame[f'{side}_{state}'] = counts[f'{side}_state'].eq(state).astype(int)
     frame.attrs["coverage_rate"] = float(counts.availability_covered.mean())
     frame.attrs["unmapped_team_rows"] = counts.attrs.get("unmapped_team_rows", 0)
+    frame.attrs['selected_reports'] = counts
+    frame.attrs['rejected_rows'] = counts.attrs['rejected_rows']
     return frame
 
 
@@ -268,16 +373,28 @@ def compare_availability(data, parsed_csv, team_log, out, threads=2):
     frame = load_games(data)
     dev = frame[frame.decision_at < pd.Timestamp("2025-07-01", tz="UTC")].copy()
     reports = pd.read_csv(parsed_csv)
+    parse_manifest_path = Path(parsed_csv).with_suffix(Path(parsed_csv).suffix+'.manifest.json')
+    if not parse_manifest_path.exists():
+        raise ValueError('Parsed CSV manifest required; reparse into a new file')
+    parse_manifest = json.loads(parse_manifest_path.read_text())
+    if parse_manifest['csv_sha256'] != digest(parsed_csv) or parse_manifest['parser_sha256'] != digest(Path(__file__)):
+        raise ValueError('Parsed CSV or parser drifted; reparse into a new file')
     reports["report_at"] = pd.to_datetime(reports.report_at, utc=True, format="mixed")
     availability = availability_frame(dev, reports, team_lookup(team_log))
     features = build_features(dev).merge(availability, on="game_id", validate="one_to_one")
     extended = list(FEATURES)+AVAILABILITY_FEATURES
     out = new_dir(out)
+    selection = availability.attrs['selected_reports']
+    selection.to_csv(out/'selected_reports.csv', index=False)
+    availability.attrs['rejected_rows'].to_csv(out/'rejected_report_rows.csv', index=False)
+    write_json(out/'parse_manifest.json', parse_manifest)
     features.to_csv(out/"development_features.csv", index=False)
-    protocol = ("Base eleven features versus the same set plus five declared-availability "
-        "differentials and a coverage indicator, on the three existing development folds. "
-        "For each game the latest report whose own timestamp precedes the decision cutoff is "
-        "used; a report published after the cutoff is never read, and actual absence is never "
+    protocol = ("Base eleven features versus status-count differences, both-usable coverage, "
+        "and per-side missing/stale/not-submitted/invalid indicators on existing development folds. "
+        "Reports match Eastern game date, away/home matchup, and team before timestamp selection. "
+        "Latest nominal report time must strictly precede cutoff; age above 48 hours is stale. "
+        "Only usable snapshots contribute player-status counts. No fallback to other games. "
+        "Duplicate-player or multiple-source snapshots are invalid. Actual absence is never "
         "substituted for a declared status. Counts are unweighted: no player-impact or minutes "
         "data is available, so every listed player counts the same. Reports were BACKFILLED, "
         "which supports development but cannot establish what was visible before a past game. "
@@ -287,6 +404,13 @@ def compare_availability(data, parsed_csv, team_log, out, threads=2):
               "coverage_rate": availability.attrs["coverage_rate"],
               "unmapped_team_rows": availability.attrs["unmapped_team_rows"],
               "reports_parsed": int(reports.source.nunique()), "report_rows": len(reports),
+              "state_counts": {s: selection[f'{s}_state'].value_counts().to_dict() for s in ('home','away')},
+              "rejected_report_rows": len(availability.attrs['rejected_rows']),
+              "injury_provenance": {'parsed_csv_sha256': digest(parsed_csv),
+                                    'team_log_sha256': digest(team_log),
+                                    'parse_manifest_sha256': digest(parse_manifest_path),
+                                    'parser_version': PARSER_VERSION,
+                                    'max_report_age_hours': MAX_REPORT_AGE_HOURS},
               "folds": {}, "pooled": {}, "code_sha256": code_hash(),
               "data_sha256": {f: digest(data/f) for f in ("games.csv", "results.csv")}}
     pooled = {"base": [], "extended": []}
@@ -302,7 +426,9 @@ def compare_availability(data, parsed_csv, team_log, out, threads=2):
             model, calibrator, raw, p = _fit(combined, cal, val, columns)
             child = new_dir(out/f"{season}-{name}")
             write_json(child/"bundle.json", {"features": columns, "logistic": model,
-                                             "calibrator": calibrator, "l2": .01})
+                                             "calibrator": calibrator, "l2": .01,
+                                             'injury_provenance': report['injury_provenance'],
+                                             'boundaries': fold_boundaries(year)})
             prediction = val[["game_id", "decision_at", "y"]].copy()
             prediction["p_raw"], prediction["p"] = raw, p
             prediction.to_csv(child/"validation_predictions.csv", index=False)
@@ -328,6 +454,8 @@ def compare_availability(data, parsed_csv, team_log, out, threads=2):
     lines = ["# Declared-availability feature comparison", "", WARNING, "", protocol, "",
              f"Reports parsed: {report['reports_parsed']} ({report['report_rows']} rows). "
              f"Game coverage: {report['coverage_rate']:.1%}. Unmapped team rows: {report['unmapped_team_rows']}.",
+             f"Coverage means both teams usable. States: {report['state_counts']}",
+             f"Rejected rows: {report['rejected_report_rows']}. See selected_reports.csv and rejected_report_rows.csv.",
              "", "Per-fold calibrated log loss (lower is better):"]
     for season, fold in report["folds"].items():
         lines.append(f"- {season}, n={fold['split_counts']['validation']}, "

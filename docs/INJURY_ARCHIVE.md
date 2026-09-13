@@ -1,5 +1,9 @@
 # Official NBA injury reports: coverage, access and caveats
 
+**Superseded experiment warning:** `avail-v1` and `avail-v2` used a faulty
+team-only injury join. See the "Audited replacement workflow" section below
+before using any historical instructions or conclusions in this document.
+
 Verified 2026-09-13 by direct retrieval. This corrects an earlier assumption in
 DATA_SOURCING.md that injury history could only be captured forward.
 
@@ -154,3 +158,57 @@ establish what was visible before a past game. Adopting availability features fo
 2026-27 therefore requires prospective capture from opening night - the same
 report, fetched before each cutoff and marked `prospective` in the index - and a
 NEW frozen release, since the forecast surface changes.
+# Audited replacement workflow (2026-09-13)
+
+Earlier `avail-v1`/`avail-v2` results are retained but are NOT grounds to adopt
+injury features: their team-only lookup mixed report games and accepted stale
+reports. Reproducibility did not establish input correctness. Use new paths:
+
+```bash
+sports parse-injuries --archive data/injury-archive --out data/injury-archive/parsed-v3.csv
+sports compare-availability --data data/normalized/nba-v3 --reports data/injury-archive/parsed-v3.csv --team-log data/raw/nba-team-games.csv --out runs/avail-v3 --threads 2
+sports report --path runs/avail-v3
+```
+
+Parser `game-scoped-v3` consumes standalone date/time/matchup/team headers even
+when a player's status appears on the next line. A known NBA team-name prefix
+is separated before matching the entire comma-bearing player name, preserving
+multiword surnames and team context across pages. Unknown identity rows are
+quarantined by the feature join rather than used under guessed identities.
+
+Reports must match Eastern scheduled game date, exact away/home matchup and team
+before choosing the latest nominal timestamp strictly before the cutoff. There
+is no fallback to another game. The fixed, untuned age cap is 48 hours.
+Per-side states are:
+
+- `missing`: no matching report before cutoff.
+- `stale`: latest matching report is older than 48 hours.
+- `not_submitted`: fresh report explicitly says not yet submitted.
+- `usable`: fresh matching report with declared player statuses.
+- `invalid`: multiple source files at the same selected timestamp or duplicate
+  player rows. These snapshots contribute no player counts.
+
+Only usable snapshots contribute player-status counts. Coverage now means BOTH
+teams have usable reports; not-submitted no longer means covered. A zero count
+without a usable report must not be interpreted as a healthy roster. Per-side
+missing/stale/not-submitted/invalid indicators accompany the count differences.
+This expands the experimental feature set; comparisons with earlier results
+reflect both correctness repairs and the new missingness representation.
+
+Each parsed row carries PDF SHA-256, parser version, archive capture mode,
+retrieval timestamp, and source URL. The CSV sidecar manifest records its hash,
+parser source hash, archive-index hash, all PDF hashes and pdfplumber version.
+Resume refuses legacy files or changed parser/CSV/archive inputs. Use a new
+output path after changes; do not delete prior CSVs. An interrupted write that
+leaves the manifest out of sync also requires a new output rather than silently
+resuming unverifiable contents. Zero-row files are reported as failures.
+
+Each comparison saves `selected_reports.csv` (game/side, state, matched report,
+age and provenance), `rejected_report_rows.csv`, a copied parse manifest, and
+hashes of the parsed CSV and team-log mapping input. Archive source records
+remain immutable; these nominal timestamps still cannot prove actual historic
+publication/availability. No repaired result is automatically promoted into a
+deployment release. The final holdout is already consumed and is not rerun.
+
+The legacy discussion above documents earlier experiments and may contain
+superseded row counts and claims; this section takes precedence.

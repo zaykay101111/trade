@@ -1,0 +1,303 @@
+{
+  "created_at": "2026-09-13T18:29:10.804077+00:00",
+  "sport": "nfl",
+  "warning": "Research only: no odds, ROI, stakes, or evidence of beating bookmakers. Kickoff times were converted from US Eastern by us and schedule observation times are reconstructed, not provider timestamps. Result availability assumes kickoff plus 24h. Development folds may be inspected repeatedly and can be overfit; they are not confirmation.",
+  "advancement_criteria": "Prespecified before any holdout use: the challenger advances only if its pooled DECIDED log loss beats the better of the two baselines across all three development folds AND the pooled paired difference has a 95% week-block interval excluding zero. Three-way log loss must not be worse. Meeting these criteria authorises one single scoring of the reserved 2025 season; it does not authorise deployment or any wager.",
+  "features": [
+    "margin_diff",
+    "scored_diff",
+    "allowed_diff",
+    "win_rate_diff",
+    "history_count_diff",
+    "home_rest",
+    "away_rest",
+    "elo_diff",
+    "neutral",
+    "div_game"
+  ],
+  "l2": 0.01,
+  "development_folds": [
+    2022,
+    2023,
+    2024
+  ],
+  "final_holdout_season": 2025,
+  "prospective_season": 2026,
+  "games_loaded": 6447,
+  "ties_loaded": 14,
+  "folds": {
+    "2022": {
+      "split_counts": {
+        "fit": 5360,
+        "calibration": 272,
+        "validation": 271
+      },
+      "tie_rate_used": 0.0020477815699658703,
+      "home_rate_used": 0.5653393157599551,
+      "validation_ties": 2,
+      "models": {
+        "home_rate": {
+          "games": 271,
+          "ties": 2,
+          "three_way_log_loss": 0.7283007029179924,
+          "three_way_brier": 0.49996423402602275,
+          "decided_games": 269,
+          "decided_log_loss": 0.6856359702533884,
+          "decided_brier": 0.24625362239186568,
+          "decided_accuracy": 0.5613382899628253
+        },
+        "elo": {
+          "games": 271,
+          "ties": 2,
+          "three_way_log_loss": 0.7231013560841059,
+          "three_way_brier": 0.4902571314746382,
+          "decided_games": 269,
+          "decided_log_loss": 0.6803979665657182,
+          "decided_brier": 0.2414025378113122,
+          "decided_accuracy": 0.6096654275092936
+        },
+        "logistic": {
+          "games": 271,
+          "ties": 2,
+          "three_way_log_loss": 0.695396577935342,
+          "three_way_brier": 0.4676732883915904,
+          "decided_games": 269,
+          "decided_log_loss": 0.6524872049362944,
+          "decided_brier": 0.22987534458644207,
+          "decided_accuracy": 0.6245353159851301,
+          "raw_metrics": {
+            "games": 271,
+            "ties": 2,
+            "three_way_log_loss": 0.6917620570386023,
+            "three_way_brier": 0.46434941790679934,
+            "decided_games": 269,
+            "decided_log_loss": 0.6488256615793557,
+            "decided_brier": 0.22822134066576671,
+            "decided_accuracy": 0.6282527881040892
+          }
+        }
+      },
+      "logistic_minus_home_rate": {
+        "difference": -0.03314876531709385,
+        "ci95": [
+          -0.059090589948057784,
+          -0.0026727373222353193
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      },
+      "logistic_minus_elo": {
+        "difference": -0.02791076162942379,
+        "ci95": [
+          -0.05108158533088343,
+          -0.006218479532752761
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      }
+    },
+    "2023": {
+      "split_counts": {
+        "fit": 5632,
+        "calibration": 271,
+        "validation": 272
+      },
+      "tie_rate_used": 0.0021200260926288322,
+      "home_rate_used": 0.5629893238434164,
+      "validation_ties": 0,
+      "models": {
+        "home_rate": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.689299492713481,
+          "three_way_brier": 0.49404319448556633,
+          "decided_games": 272,
+          "decided_log_loss": 0.6871772161843168,
+          "decided_brier": 0.24702030302375633,
+          "decided_accuracy": 0.5551470588235294
+        },
+        "elo": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.6772593286108342,
+          "three_way_brier": 0.4787064911964258,
+          "decided_games": 272,
+          "decided_log_loss": 0.6751370520816699,
+          "decided_brier": 0.23938996835126888,
+          "decided_accuracy": 0.625
+        },
+        "logistic": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.6492751125592352,
+          "three_way_brier": 0.45589039609852433,
+          "decided_games": 272,
+          "decided_log_loss": 0.647152836030071,
+          "decided_brier": 0.22794289666230252,
+          "decided_accuracy": 0.6176470588235294,
+          "raw_metrics": {
+            "games": 272,
+            "ties": 0,
+            "three_way_log_loss": 0.6497451471494332,
+            "three_way_brier": 0.45628176529479064,
+            "decided_games": 272,
+            "decided_log_loss": 0.6476228706202689,
+            "decided_brier": 0.22814657130482086,
+            "decided_accuracy": 0.6176470588235294
+          }
+        }
+      },
+      "logistic_minus_home_rate": {
+        "difference": -0.04002438015424588,
+        "ci95": [
+          -0.06119791999770522,
+          -0.017552502496217117
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      },
+      "logistic_minus_elo": {
+        "difference": -0.02798421605159896,
+        "ci95": [
+          -0.052894276690671836,
+          -0.005349816054610406
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      }
+    },
+    "2024": {
+      "split_counts": {
+        "fit": 5903,
+        "calibration": 272,
+        "validation": 272
+      },
+      "tie_rate_used": 0.002342651881930345,
+      "home_rate_used": 0.5629139072847682,
+      "validation_ties": 0,
+      "models": {
+        "home_rate": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.6951010295412795,
+          "three_way_brier": 0.4995801707888981,
+          "decided_games": 272,
+          "decided_log_loss": 0.6927556293573806,
+          "decided_brier": 0.249794739394815,
+          "decided_accuracy": 0.5330882352941176
+        },
+        "elo": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.624786013131639,
+          "three_way_brier": 0.434476834373347,
+          "decided_games": 272,
+          "decided_log_loss": 0.6224406129477397,
+          "decided_brier": 0.2172304414879498,
+          "decided_accuracy": 0.6507352941176471
+        },
+        "logistic": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.6352172989836783,
+          "three_way_brier": 0.4428367224565518,
+          "decided_games": 272,
+          "decided_log_loss": 0.6328718987997791,
+          "decided_brier": 0.2214019467742796,
+          "decided_accuracy": 0.6544117647058824,
+          "raw_metrics": {
+            "games": 272,
+            "ties": 0,
+            "three_way_log_loss": 0.6354033973622997,
+            "three_way_brier": 0.44323656218914487,
+            "decided_games": 272,
+            "decided_log_loss": 0.6330579971784004,
+            "decided_brier": 0.22161119982296631,
+            "decided_accuracy": 0.6360294117647058
+          }
+        }
+      },
+      "logistic_minus_home_rate": {
+        "difference": -0.05988373055760137,
+        "ci95": [
+          -0.09927556526490068,
+          -0.02086922657413997
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      },
+      "logistic_minus_elo": {
+        "difference": 0.01043128585203933,
+        "ci95": [
+          -0.019787394746473563,
+          0.03634238328361371
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      }
+    }
+  },
+  "pooled": {
+    "home_rate": {
+      "games": 815,
+      "ties": 2,
+      "three_way_log_loss": 0.7040613212038861,
+      "three_way_brier": 0.4978593804979227,
+      "decided_games": 813,
+      "decided_log_loss": 0.688533591618085,
+      "decided_brier": 0.24769485358088963,
+      "decided_accuracy": 0.5498154981549815
+    },
+    "elo": {
+      "games": 815,
+      "ties": 2,
+      "three_way_log_loss": 0.6748470486991923,
+      "three_way_brier": 0.46778219793715664,
+      "decided_games": 813,
+      "decided_log_loss": 0.6592474512843512,
+      "decided_brier": 0.23264210842252206,
+      "decided_accuracy": 0.6285362853628537
+    },
+    "logistic": {
+      "games": 815,
+      "ties": 2,
+      "three_way_log_loss": 0.6597766291990753,
+      "three_way_brier": 0.45545064579683664,
+      "decided_games": 813,
+      "decided_log_loss": 0.6441399581815281,
+      "decided_brier": 0.2263939300227592,
+      "decided_accuracy": 0.6322263222632226
+    },
+    "logistic_minus_home_rate": {
+      "difference": -0.04439363343655682,
+      "ci95": [
+        -0.062161447692962626,
+        -0.02582745360785068
+      ],
+      "blocks": 57,
+      "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+    },
+    "logistic_minus_elo": {
+      "difference": -0.015107493102823145,
+      "ci95": [
+        -0.030797128110330807,
+        0.00015899445745718653
+      ],
+      "blocks": 57,
+      "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+    }
+  },
+  "code_sha256": "5b52f19554edc788f24ea457d43bbd3080fb5b7fa4f5f35dc83550a537536ddd",
+  "data_sha256": {
+    "games.csv": "7c23fbd663e14561d1c6ddc27ab91281773152b7aa2903ce7647cb651ba5c6f7",
+    "results.csv": "8fec453c55894a5235307054858ffadab862141c2235ba228630baddb6aa2788"
+  },
+  "advancement": {
+    "stronger_baseline": "elo",
+    "all_folds_better": false,
+    "pooled_interval_excludes_zero": false,
+    "three_way_not_worse": true,
+    "criteria_met": false,
+    "holdout_consumed": false
+  }
+}

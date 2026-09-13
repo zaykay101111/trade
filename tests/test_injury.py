@@ -56,7 +56,8 @@ def build(games, reports):
 
 def frames():
     cutoff = pd.Timestamp("2026-01-10T23:00:00Z")
-    games = pd.DataFrame([{"game_id": "G1", "home_id": "A", "away_id": "B", "decision_at": cutoff}])
+    games = pd.DataFrame([{"game_id": "G1", "home_id": "A", "away_id": "B", "decision_at": cutoff,
+                           "scheduled_at": cutoff+pd.Timedelta(hours=1)}])
     reports = pd.DataFrame([
         {"team": "TeamA", "status": "Out", "report_at": cutoff-pd.Timedelta(hours=6)},
         {"team": "TeamA", "status": "Out", "report_at": cutoff-pd.Timedelta(hours=6)},
@@ -65,6 +66,8 @@ def frames():
         {"team": "TeamA", "status": "Out", "report_at": cutoff+pd.Timedelta(minutes=30)},
         {"team": "TeamA", "status": "Out", "report_at": cutoff+pd.Timedelta(minutes=30)},
     ])
+    reports['game_date'] = '01/10/2026'
+    reports['matchup'] = 'TeamB@TeamA'
     return games, reports, cutoff
 
 

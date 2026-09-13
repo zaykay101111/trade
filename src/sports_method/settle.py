@@ -14,6 +14,7 @@ from .free_data import load_games
 from .io import new_dir, write_json, digest, now, code_hash
 
 PLACEHOLDER_TEAM = "0"
+RESULTS_COLUMNS = ["game_id", "home_score", "away_score", "available_at"]
 GAMES_COLUMNS = ["game_id", "home_id", "away_id", "home_name", "away_name", "scheduled_at",
                  "schedule_observed_at", "decision_at", "season_type", "contract",
                  "is_neutral", "source_status"]
@@ -59,7 +60,11 @@ def settled_rows(raw_dir, observed_lag_hours=48, availability_lag_hours=24):
                           "source_status": status})
             results.append({"game_id": gid, "home_score": int(home_score), "away_score": int(away_score),
                             "available_at": (scheduled+pd.Timedelta(hours=availability_lag_hours)).isoformat()})
-    return pd.DataFrame(games, columns=GAMES_COLUMNS), pd.DataFrame(results), skipped
+    # Both frames need explicit columns: before a season's first game settles,
+    # these lists are empty and a bare DataFrame would have no columns at all,
+    # so every later .game_id access would raise.
+    return (pd.DataFrame(games, columns=GAMES_COLUMNS),
+            pd.DataFrame(results, columns=RESULTS_COLUMNS), skipped)
 
 
 def merge_settled(base, season_raw, out, *, observed_lag_hours=48, availability_lag_hours=24):

@@ -1,0 +1,67 @@
+{
+  "mode": "simulation",
+  "issued_at": "2026-10-20 17:58:00+00:00",
+  "inputs_observed_at": "2026-10-20 17:58:00+00:00",
+  "game_id": "0022600001",
+  "scheduled_at": "2026-10-20 19:00:00+00:00",
+  "cutoff": "2026-10-20 18:00:00+00:00",
+  "predictions": {
+    "p_deployed": 0.5629919337804358,
+    "p_control": 0.5280366884276054,
+    "p_injury": 0.39781088096307315
+  },
+  "features": {
+    "margin_diff": 2.3000000000000007,
+    "scored_diff": 4.700000000000003,
+    "allowed_diff": 2.4000000000000057,
+    "win_rate_diff": 0.0,
+    "history_count_diff": 0.0,
+    "home_rest": 14.0,
+    "away_rest": 14.0,
+    "home_b2b": 0.0,
+    "away_b2b": 0.0,
+    "elo_diff": -23.885853940450033,
+    "neutral": 0,
+    "out_diff": 0,
+    "doubtful_diff": 0,
+    "questionable_diff": 0,
+    "probable_diff": 0,
+    "not_submitted_diff": 0,
+    "availability_covered": 0,
+    "home_missing": 1,
+    "home_stale": 0,
+    "home_not_submitted": 0,
+    "home_invalid": 0,
+    "away_missing": 1,
+    "away_stale": 0,
+    "away_not_submitted": 0,
+    "away_invalid": 0
+  },
+  "selected_reports": [
+    {
+      "game_id": "0022600001",
+      "decision_at": "2026-10-20T17:58:00.000Z",
+      "scheduled_at": "2026-10-20T19:00:00.000Z",
+      "home_id": "1610612765",
+      "away_id": "1610612738",
+      "home_state": "missing",
+      "away_state": "missing",
+      "availability_covered": false
+    }
+  ],
+  "provenance": {
+    "pair_sha256": "840fcf10f94fcad9898108dc8cdda3d381b6296cf2c97877d22517affd40e8a7",
+    "baseline_sha256": "e7e59a082bb5b8ae6d041ba16e344db13f83fb57d3d88511d1abd1213dd922e9",
+    "schedule_sha256": "a9d22bb65a649fe6e59be5c79826251fe7720bc4bbb07b512dd0bfce80701e23",
+    "data_sha256": {
+      "games.csv": "32d3037da5088ea9a726a2fc561b7fcb8a2230bef3007742f3602449df691d73",
+      "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2"
+    },
+    "surface": {
+      "baseline": "393f959d23a64ed126ac3238891f31a13c64f78595389f31f37c0c7ec1b2b199",
+      "injury": "52edcdc7ecb60018b4edd901fa3707192d345422dd6b8cbe71e8d39024be2fce",
+      "challenger": "a15c181e474de49bd030921de4f1cdc08ce16b239a030ccca077b27770f2fa8c"
+    },
+    "injury_sources": []
+  }
+}

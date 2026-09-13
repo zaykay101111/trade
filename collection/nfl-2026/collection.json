@@ -1,0 +1,11 @@
+{
+  "created_at": "2026-09-13T18:35:09.184951+00:00",
+  "sport": "nfl",
+  "season": 2026,
+  "contract": "nfl_regular_fullgame_moneyline_ot_tie_push",
+  "games": 272,
+  "first_cutoff": "2026-09-09 23:20:00+00:00",
+  "last_cutoff": "2027-01-10 17:00:00+00:00",
+  "source_games_sha256": "7c23fbd663e14561d1c6ddc27ab91281773152b7aa2903ce7647cb651ba5c6f7",
+  "warning": "Kickoff converted from US Eastern by us; the feed carries no timezone or revision timestamp. Refresh the schedule as the season progresses; flexed kickoffs move cutoffs."
+}

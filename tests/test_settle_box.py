@@ -132,3 +132,30 @@ def test_compare_extension_runs_and_refuses_overwrite(tmp_path):
     assert 'not confirmation' in (out/'PASTE_BACK.md').read_text()
     with pytest.raises(FileExistsError):
         compare_extension(tmp_path, box, out, threads=1)
+
+
+def test_settled_rows_have_columns_before_any_game_settles(tmp_path):
+    """An all-unplayed season must yield empty-but-typed frames, not bare ones.
+
+    Regression: a bare pd.DataFrame([]) has no columns, so merge_settled raised
+    AttributeError on .game_id for any season whose first game had not settled.
+    """
+    import json
+    import pandas as pd
+    from sports_method.settle import RESULTS_COLUMNS, GAMES_COLUMNS, settled_rows
+    raw = tmp_path/"raw"
+    raw.mkdir()
+    scheduled = pd.Timestamp("2026-10-20T23:00:00Z")
+    pd.DataFrame([{
+        "gameId": "0022600001", "homeTeam_teamId": 1610612738,
+        "awayTeam_teamId": 1610612752, "homeTeam_teamName": "Celtics",
+        "awayTeam_teamName": "Knicks", "gameStatusText": "7:00 pm ET",
+        "gameDateTimeUTC": scheduled.isoformat(), "homeTeam_score": None,
+        "awayTeam_score": None, "isNeutral": False,
+    }]).to_json(raw/"schedule-2026-27.json", orient="records", date_format="iso")
+    games, results, skipped = settled_rows(raw)
+    assert list(results.columns) == RESULTS_COLUMNS
+    assert list(games.columns) == GAMES_COLUMNS
+    assert len(results) == 0 and skipped["not_final"] == 1
+    # The access that used to raise.
+    assert results.game_id.isin({"x"}).sum() == 0

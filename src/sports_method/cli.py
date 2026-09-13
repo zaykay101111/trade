@@ -7,6 +7,21 @@ from .io import read_json
 def main():
     parser=argparse.ArgumentParser(description="NBA first-model research and paper monitoring")
     sub=parser.add_subparsers(dest="command",required=True)
+    p=sub.add_parser("freeze-injury-pair", help="Freeze a matched control and injury challenger; scores nothing")
+    for flag in ("data", "reports", "team-log", "baseline", "out"):
+        p.add_argument("--"+flag, required=True)
+    p=sub.add_parser("injury-pair-poll", help="Offline paired forecasts; simulation unless --record")
+    for flag in ("collection", "pair", "baseline", "data", "out"):
+        p.add_argument("--"+flag, required=True)
+    p.add_argument("--archive");p.add_argument("--at")
+    p.add_argument("--record", action="store_true", help="Use actual UTC; no network requests")
+    p=sub.add_parser("injury-pair-status", help="Paired-record coverage, missed games, archive health; reads only")
+    p.add_argument("--collection", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--archive");p.add_argument("--at")
+    p=sub.add_parser("injury-pair-settle", help="Score settled paired records: log loss, Brier, calibration, coverage")
+    p.add_argument("--records", required=True);p.add_argument("--collection", required=True)
+    p.add_argument("--data", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--include-simulated", action="store_true", help="Rehearsal scoring of simulated records; never evidence")
     p=sub.add_parser("merge-settled", help="Fold newly settled games into a new rolling dataset")
     p.add_argument("--base", required=True);p.add_argument("--season-raw", required=True)
     p.add_argument("--out", required=True)
@@ -17,6 +32,34 @@ def main():
     p.add_argument("--data", required=True);p.add_argument("--reports", required=True)
     p.add_argument("--team-log", required=True);p.add_argument("--out", required=True)
     p.add_argument("--threads", type=int, default=2)
+    p=sub.add_parser("nfl-train", help="NFL development: home-field and Elo baselines versus regularized challenger")
+    p.add_argument("--data", required=True);p.add_argument("--out", required=True)
+    p=sub.add_parser("nfl-compare-qb", help="Research: NFL base features versus quarterback expected-starter features")
+    p.add_argument("--data", required=True);p.add_argument("--qb-weekly", required=True)
+    p.add_argument("--out", required=True)
+    p=sub.add_parser("nfl-freeze", help="Freeze the NFL control/challenger pair; scores nothing")
+    p.add_argument("--data", required=True);p.add_argument("--out", required=True)
+    p=sub.add_parser("nfl-collect-init", help="Create an NFL season collection plan")
+    p.add_argument("--data", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--season", required=True, type=int)
+    p=sub.add_parser("nfl-collect-refresh", help="Fold an updated NFL schedule in; records stay immutable")
+    p.add_argument("--collection", required=True);p.add_argument("--data", required=True)
+    p=sub.add_parser("nfl-poll", help="Offline paired NFL forecasts; simulation unless --record")
+    for flag in ("collection", "pair", "data", "out"):
+        p.add_argument("--"+flag, required=True)
+    p.add_argument("--at");p.add_argument("--record", action="store_true")
+    p.add_argument("--window-minutes", type=float, default=5)
+    p=sub.add_parser("nfl-status", help="NFL paired coverage and missed games; reads only")
+    p.add_argument("--collection", required=True);p.add_argument("--records", required=True)
+    p.add_argument("--at")
+    p=sub.add_parser("nfl-settle", help="Score settled NFL pairs: ties/pushes/voids, calibration, coverage")
+    p.add_argument("--records", required=True);p.add_argument("--collection", required=True)
+    p.add_argument("--data", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--include-simulated", action="store_true")
+    p=sub.add_parser("compare-impact", help="Research: availability features versus player-impact minute weights")
+    p.add_argument("--data", required=True);p.add_argument("--reports", required=True)
+    p.add_argument("--team-log", required=True);p.add_argument("--player-logs", required=True)
+    p.add_argument("--out", required=True);p.add_argument("--threads", type=int, default=2)
     p=sub.add_parser("compare-box", help="Development comparison: base features versus box-score extension")
     p.add_argument("--data", required=True);p.add_argument("--box", required=True)
     p.add_argument("--out", required=True);p.add_argument("--threads", type=int, default=2)
@@ -86,6 +129,20 @@ def main():
         print("ERROR: "+str(exc),file=sys.stderr);raise SystemExit(2)
 
 def dispatch(a):
+    if a.command=="freeze-injury-pair":
+        from .challenger import freeze
+        return freeze(a.data, a.reports, a.team_log, a.baseline, a.out)
+    if a.command=="injury-pair-poll":
+        from .challenger import poll
+        return poll(a.collection, a.pair, a.baseline, a.data, a.out,
+                    archive=a.archive, at=a.at, record=a.record)
+    if a.command=="injury-pair-status":
+        from .pair_monitor import pair_status
+        return pair_status(a.collection, a.out, archive=a.archive, at=a.at)
+    if a.command=="injury-pair-settle":
+        from .pair_monitor import pair_evaluate
+        return pair_evaluate(a.records, a.collection, a.data, a.out,
+                             include_simulated=a.include_simulated)
     if a.command=="merge-settled":
         from .settle import merge_settled
         return merge_settled(a.base, a.season_raw, a.out)
@@ -95,6 +152,35 @@ def dispatch(a):
     if a.command=="compare-availability":
         from .injury import compare_availability
         return compare_availability(a.data, a.reports, a.team_log, a.out, a.threads)
+    if a.command=="nfl-train":
+        from .nfl_train import train_nfl
+        return train_nfl(a.data, a.out)
+    if a.command=="nfl-compare-qb":
+        from .nfl_qb import compare_qb
+        return compare_qb(a.data, a.qb_weekly, a.out)
+    if a.command=="nfl-freeze":
+        from .nfl_collect import freeze_nfl
+        return freeze_nfl(a.data, a.out)
+    if a.command=="nfl-collect-init":
+        from .nfl_collect import init_nfl_collection
+        return init_nfl_collection(a.data, a.out, a.season)
+    if a.command=="nfl-collect-refresh":
+        from .nfl_collect import refresh_nfl_collection
+        return refresh_nfl_collection(a.collection, a.data)
+    if a.command=="nfl-poll":
+        from .nfl_collect import poll_nfl
+        return poll_nfl(a.collection, a.pair, a.data, a.out, at=a.at, record=a.record,
+                        window_minutes=a.window_minutes)
+    if a.command=="nfl-status":
+        from .nfl_monitor import nfl_status
+        return nfl_status(a.collection, a.records, at=a.at)
+    if a.command=="nfl-settle":
+        from .nfl_monitor import settle_nfl
+        return settle_nfl(a.records, a.collection, a.data, a.out,
+                          include_simulated=a.include_simulated)
+    if a.command=="compare-impact":
+        from .player_impact import compare_impact
+        return compare_impact(a.data, a.reports, a.team_log, a.player_logs, a.out, a.threads)
     if a.command=="compare-box":
         from .free_box import compare_extension
         return compare_extension(a.data, a.box, a.out, a.threads)

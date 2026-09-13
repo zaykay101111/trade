@@ -1,0 +1,85 @@
+{
+  "version": "nfl-pair-v1",
+  "sport": "nfl",
+  "created_at": "2026-09-13T18:35:09.171262+00:00",
+  "contract": "nfl_regular_fullgame_moneyline_ot_tie_push",
+  "surface": {
+    "nfl_data": "6e19d48436a6efd9f0649256e483d6efafa105b1a973faa65c3d426d9d2a8443",
+    "nfl_collect": "df0fb6a27ad4bef2fc5fac6945efb78395883293969836f0d456b1e90b6e7835"
+  },
+  "features": [
+    "margin_diff",
+    "scored_diff",
+    "allowed_diff",
+    "win_rate_diff",
+    "history_count_diff",
+    "home_rest",
+    "away_rest",
+    "elo_diff",
+    "neutral",
+    "div_game"
+  ],
+  "l2": 0.01,
+  "logistic": {
+    "mean": [
+      -0.18649814630174957,
+      -0.10877035010292596,
+      0.07772779619882364,
+      -0.00564682346454786,
+      0.0021100470702807984,
+      8.288446928709265,
+      8.341867076051868,
+      -0.01033347130520447,
+      0.008602499594221717,
+      0.3838662554780068
+    ],
+    "scale": [
+      9.44832009507992,
+      6.672520736106731,
+      5.7557016209306955,
+      0.2997531405903021,
+      0.5088045716122305,
+      3.8072618291849203,
+      3.7952904891967822,
+      125.65535184521092,
+      0.09234985974517304,
+      0.48632597440739317
+    ],
+    "coef": [
+      0.27720642876641544,
+      0.20090043448230016,
+      0.2033206517956024,
+      -0.09408242169387296,
+      0.08737780528517561,
+      0.0018848111736997387,
+      0.05158059192014317,
+      -0.06988009607245041,
+      0.2140131348430967,
+      -0.04407079923564297,
+      -0.05556646712397385
+    ]
+  },
+  "calibrator": {
+    "intercept": -0.16927958319896003,
+    "slope": 1.1167973159728497
+  },
+  "tie_rate": 0.0022471910112359553,
+  "fit_through_season": 2023,
+  "calibration_season": 2024,
+  "reserved_holdout_season": 2025,
+  "split_counts": {
+    "fit": 6175,
+    "calibration": 272
+  },
+  "elo": {
+    "k": 20.0,
+    "scale": 400.0,
+    "home": 55.0,
+    "window": 10
+  },
+  "sources": {
+    "games.csv": "7c23fbd663e14561d1c6ddc27ab91281773152b7aa2903ce7647cb651ba5c6f7",
+    "results.csv": "8fec453c55894a5235307054858ffadab862141c2235ba228630baddb6aa2788"
+  },
+  "protocol": "Paired NFL prospective records. Control is Elo; challenger is the regularized logistic. Both score identical games. Development did NOT meet the prespecified advancement criteria (the challenger lost the 2024 fold to Elo and the pooled interval against Elo included zero), so this pair is a RESEARCH comparison collected prospectively, not a deployment. No stake, odds request or promotion. Ties settle as a push on the two-way moneyline. Record once per game inside the five minutes before T-60; never backdate or overwrite."
+}

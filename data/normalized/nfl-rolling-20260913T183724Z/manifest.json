@@ -1,0 +1,27 @@
+{
+  "created_at": "2026-09-13T18:37:25.229923+00:00",
+  "sport": "nfl",
+  "contract": "nfl_regular_fullgame_moneyline_ot_tie_push",
+  "source": {
+    "url": "https://github.com/nflverse/nfldata/raw/master/data/games.csv",
+    "retrieved_at": "2026-09-13T18:37:25.116003+00:00",
+    "bytes": 2177046,
+    "sha256": "0c34a519753ada6b5b37f5e8be246021813484adb15ae7c067af9c3aca534d2d",
+    "capture": "prospective",
+    "license": "CC-BY-4.0 (nflverse); aggregation of NFL/NGS/PFR sources, not an official feed"
+  },
+  "rows": 6991,
+  "played": 6721,
+  "unplayed": 270,
+  "ties": 15,
+  "neutral_site": 74,
+  "dropped_missing_kickoff": 248,
+  "seasons": [
+    2000,
+    2026
+  ],
+  "observed_lag_hours": 48,
+  "availability_lag_hours": 24,
+  "decision_lead_minutes": 60,
+  "warning": "Regular season only. Kickoff converted from US Eastern by us; the feed carries no timezone, publication or revision timestamp. schedule_observed_at is a RECONSTRUCTED assumption and is not evidence of historical availability. available_at is ASSUMED kickoff plus lag, not a verified publication time. Cancelled games are absent from the feed rather than present with a null result. Closing moneylines in the source are untimestamped and are deliberately not imported."
+}

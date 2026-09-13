@@ -2,7 +2,7 @@
   "created_at": "2026-09-13T06:31:06.250701+00:00",
   "season": "2026-27",
   "mode": "prospective_collection",
-  "revision": 1,
+  "revision": 2,
   "games": 1200,
   "awaiting_assignment": 6,
   "poll_times": [
@@ -785,5 +785,6 @@
   "estimated_credits_per_region": 773,
   "schedule_sha256": "dc8cb757a2eeb048637bbcb2fa57355f6955b696327d7f5fb31a3280444e4942",
   "code_sha256": "ea020b39efe9cc334edeb9a08ee073d3c956df8f576146f4933f6603edb462e4",
-  "warning": "Collection only: no expected value, stake, admission decision or wager is computed or recorded by this workflow."
+  "warning": "Collection only: no expected value, stake, admission decision or wager is computed or recorded by this workflow.",
+  "refreshed_at": "2026-09-13T18:59:49.468651+00:00"
 }

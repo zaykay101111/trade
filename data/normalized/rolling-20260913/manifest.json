@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-09-13T18:59:48.629744+00:00",
+  "mode": "rolling_settled",
+  "base": "/Users/kylerzook2005/Documents/Personal Projects/Sports Betting Method/data/normalized/nba-v3",
+  "season_raw": "/Users/kylerzook2005/Documents/Personal Projects/Sports Betting Method/data/raw/schedule-refresh-20260913/raw",
+  "base_games": 7230,
+  "added_games": 0,
+  "total_games": 7230,
+  "already_known": 0,
+  "skipped": {
+    "not_regular_season": 68,
+    "unassigned_teams": 6,
+    "not_final": 1200,
+    "missing_score": 0,
+    "tied": 0
+  },
+  "observed_lag_hours": 48,
+  "availability_lag_hours": 24,
+  "base_sha256": {
+    "games.csv": "32d3037da5088ea9a726a2fc561b7fcb8a2230bef3007742f3602449df691d73",
+    "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2"
+  },
+  "output_sha256": {
+    "games.csv": "0bc80ce46dd14ebcf6734ddd1e6f03243ea57fa532a50c0695ead336c45643ab",
+    "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2"
+  },
+  "code_sha256": "6315eea9746c0d8b1cf64cc63f3926dcd52fe04aa8704c876d7aa89409025b99",
+  "warning": "Scores are provider finals from the schedule payload, not revision history. available_at is ASSUMED scheduled start plus lag, not a verified publication time. Neutral-site flags are provider values and have needed manual correction before; review new neutral games.",
+  "validated_games": 7230
+}

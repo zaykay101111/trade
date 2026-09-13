@@ -1,0 +1,169 @@
+{
+  "created_at": "2026-09-13T18:43:00.880933+00:00",
+  "sport": "nfl",
+  "warning": "Research only: no odds, ROI, stakes, or evidence of beating bookmakers. Kickoff times were converted from US Eastern by us and schedule observation times are reconstructed, not provider timestamps. Result availability assumes kickoff plus 24h. Development folds may be inspected repeatedly and can be overfit; they are not confirmation.",
+  "protocol": "RESEARCH CANDIDATE. Base NFL features versus the same plus quarterback expected-starter features: mean passing EPA over that quarterback's last 8 games whose results were available before the cutoff, settled start count, an unknown-starter indicator and a backup indicator, all home minus away. The EXPECTED starter is the quarterback who started the team's most recent settled game; the target game's own starter is never read. Declared injury status is NOT used: the nflverse injuries feed carries no timestamp and cannot establish what was declared before a past kickoff. Development evidence only; not confirmation.",
+  "qb_features": [
+    "qb_epa_diff",
+    "qb_starts_diff",
+    "qb_unknown_diff",
+    "qb_backup_diff"
+  ],
+  "window_games": 8,
+  "expected_starter_matched": null,
+  "folds": {
+    "2022": {
+      "split_counts": {
+        "fit": 5360,
+        "calibration": 272,
+        "validation": 271
+      },
+      "models": {
+        "base": {
+          "games": 271,
+          "ties": 2,
+          "three_way_log_loss": 0.695396577935342,
+          "three_way_brier": 0.4676732883915904,
+          "decided_games": 269,
+          "decided_log_loss": 0.6524872049362944,
+          "decided_brier": 0.22987534458644207,
+          "decided_accuracy": 0.6245353159851301
+        },
+        "qb": {
+          "games": 271,
+          "ties": 2,
+          "three_way_log_loss": 0.6928674739837475,
+          "three_way_brier": 0.4654994563918901,
+          "decided_games": 269,
+          "decided_log_loss": 0.6499392972378477,
+          "decided_brier": 0.2287638374637162,
+          "decided_accuracy": 0.6468401486988847
+        }
+      },
+      "qb_minus_base": {
+        "difference": -0.0025479076984466762,
+        "ci95": [
+          -0.016035099260288756,
+          0.011448736969148955
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      }
+    },
+    "2023": {
+      "split_counts": {
+        "fit": 5632,
+        "calibration": 271,
+        "validation": 272
+      },
+      "models": {
+        "base": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.6492751125592352,
+          "three_way_brier": 0.45589039609852433,
+          "decided_games": 272,
+          "decided_log_loss": 0.647152836030071,
+          "decided_brier": 0.22794289666230252,
+          "decided_accuracy": 0.6176470588235294
+        },
+        "qb": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.6516513594659635,
+          "three_way_brier": 0.4578570560337899,
+          "decided_games": 272,
+          "decided_log_loss": 0.6495290829367993,
+          "decided_brier": 0.22894617841953135,
+          "decided_accuracy": 0.6323529411764706
+        }
+      },
+      "qb_minus_base": {
+        "difference": 0.0023762469067283975,
+        "ci95": [
+          -0.02459318899615728,
+          0.02743210299835937
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      }
+    },
+    "2024": {
+      "split_counts": {
+        "fit": 5903,
+        "calibration": 272,
+        "validation": 272
+      },
+      "models": {
+        "base": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.6352172989836783,
+          "three_way_brier": 0.4428367224565518,
+          "decided_games": 272,
+          "decided_log_loss": 0.6328718987997791,
+          "decided_brier": 0.2214019467742796,
+          "decided_accuracy": 0.6544117647058824
+        },
+        "qb": {
+          "games": 272,
+          "ties": 0,
+          "three_way_log_loss": 0.6218010585669788,
+          "three_way_brier": 0.4304981697761587,
+          "decided_games": 272,
+          "decided_log_loss": 0.6194556583830796,
+          "decided_brier": 0.21521972200601613,
+          "decided_accuracy": 0.6838235294117647
+        }
+      },
+      "qb_minus_base": {
+        "difference": -0.01341624041669949,
+        "ci95": [
+          -0.027593117542822905,
+          0.0020852912378385787
+        ],
+        "blocks": 19,
+        "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+      }
+    }
+  },
+  "pooled": {
+    "base": {
+      "games": 815,
+      "ties": 2,
+      "three_way_log_loss": 0.6598069084290601,
+      "three_way_brier": 0.45544976813787413,
+      "decided_games": 813,
+      "decided_log_loss": 0.6441399581815281,
+      "decided_brier": 0.2263939300227592,
+      "decided_accuracy": 0.6322263222632226
+    },
+    "qb": {
+      "games": 815,
+      "ties": 2,
+      "three_way_log_loss": 0.6552814294037911,
+      "three_way_brier": 0.4512649228888454,
+      "decided_games": 813,
+      "decided_log_loss": 0.639603346366529,
+      "decided_brier": 0.22429347748276576,
+      "decided_accuracy": 0.6543665436654367
+    },
+    "qb_minus_base": {
+      "difference": -0.00453661181499913,
+      "ci95": [
+        -0.01570118423813697,
+        0.006485032167994215
+      ],
+      "blocks": 57,
+      "method": "paired whole-week blocks; negative favours the first model; excludes training and selection uncertainty"
+    }
+  },
+  "code_sha256": "33e74b45999254da38c7bb964c8489a6fd8b1e2f414e75c50b8d152415daa171",
+  "provenance": {
+    "qb_weekly_sha256": "23d59ed56faa800bb8a739dd82e2f27292818865298aeee4020aae00843b9618",
+    "data_sha256": {
+      "games.csv": "e0c8f8c5b3e736da0c4ab5e73360cbe191fc14c47cc33644ea6c1f13cb2ac119",
+      "results.csv": "8fec453c55894a5235307054858ffadab862141c2235ba228630baddb6aa2788"
+    }
+  }
+}

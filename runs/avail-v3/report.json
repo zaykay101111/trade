@@ -1,0 +1,210 @@
+{
+  "created_at": "2026-09-13T17:06:00.000120+00:00",
+  "warning": "Research only: no odds, ROI, stakes, or evidence of beating bookmakers. Schedule observation times are reconstructed; result availability assumes +24h after scheduled start. Historical revisions are not verified. Validation is development data; repeated optimization can overfit it.",
+  "protocol": "Base eleven features versus status-count differences, both-usable coverage, and per-side missing/stale/not-submitted/invalid indicators on existing development folds. Reports match Eastern game date, away/home matchup, and team before timestamp selection. Latest nominal report time must strictly precede cutoff; age above 48 hours is stale. Only usable snapshots contribute player-status counts. No fallback to other games. Duplicate-player or multiple-source snapshots are invalid. Actual absence is never substituted for a declared status. Counts are unweighted: no player-impact or minutes data is available, so every listed player counts the same. Reports were BACKFILLED, which supports development but cannot establish what was visible before a past game. These folds have been inspected repeatedly; this is not confirmation.",
+  "availability_features": [
+    "out_diff",
+    "doubtful_diff",
+    "questionable_diff",
+    "probable_diff",
+    "not_submitted_diff",
+    "availability_covered",
+    "home_missing",
+    "home_stale",
+    "home_not_submitted",
+    "home_invalid",
+    "away_missing",
+    "away_stale",
+    "away_not_submitted",
+    "away_invalid"
+  ],
+  "coverage_rate": 0.9325,
+  "unmapped_team_rows": 16,
+  "reports_parsed": 1215,
+  "report_rows": 99904,
+  "state_counts": {
+    "home": {
+      "usable": 5738,
+      "not_submitted": 227,
+      "missing": 35
+    },
+    "away": {
+      "usable": 5726,
+      "not_submitted": 243,
+      "missing": 31
+    }
+  },
+  "rejected_report_rows": 16,
+  "injury_provenance": {
+    "parsed_csv_sha256": "3955c1bb8c64faaa1f8a347a8df974845ed66cbd34cdd9696f9a4f77959f9ca5",
+    "team_log_sha256": "8885a9021e00e72c0fdd962afc45d54fe4ef2d5462aa605b62507ad0e8b1edd2",
+    "parse_manifest_sha256": "15c7d090747761f9e397f7d6ba2cef536e9e50f616e29a341a35d760ba01e9d9",
+    "parser_version": "game-scoped-v3",
+    "max_report_age_hours": 48
+  },
+  "folds": {
+    "2022-23": {
+      "split_counts": {
+        "train": 1080,
+        "tune": 514,
+        "calibration": 707,
+        "validation": 1230
+      },
+      "validation_coverage": 0.9300813008130081,
+      "models": {
+        "base": {
+          "metrics": {
+            "log_loss": 0.647033897798031,
+            "brier": 0.2271822694553956,
+            "accuracy": 0.6333333333333333
+          },
+          "raw_metrics": {
+            "log_loss": 0.6477900397029804,
+            "brier": 0.22767700714667954,
+            "accuracy": 0.6300813008130082
+          }
+        },
+        "extended": {
+          "metrics": {
+            "log_loss": 0.6429638988014703,
+            "brier": 0.22530377510250632,
+            "accuracy": 0.6373983739837399
+          },
+          "raw_metrics": {
+            "log_loss": 0.6443011848322159,
+            "brier": 0.2260247547540506,
+            "accuracy": 0.6382113821138211
+          }
+        }
+      },
+      "extended_minus_base": {
+        "difference": -0.004069998996560697,
+        "ci95": [
+          -0.01154980363208439,
+          0.0029447007790670155
+        ],
+        "method": "paired 7-day blocks; negative favors model; excludes training/selection uncertainty"
+      }
+    },
+    "2023-24": {
+      "split_counts": {
+        "train": 2310,
+        "tune": 528,
+        "calibration": 688,
+        "validation": 1230
+      },
+      "validation_coverage": 0.9317073170731708,
+      "models": {
+        "base": {
+          "metrics": {
+            "log_loss": 0.6096827248116033,
+            "brier": 0.21095606571211692,
+            "accuracy": 0.6577235772357723
+          },
+          "raw_metrics": {
+            "log_loss": 0.6115746848464935,
+            "brier": 0.21169817126079837,
+            "accuracy": 0.6585365853658537
+          }
+        },
+        "extended": {
+          "metrics": {
+            "log_loss": 0.6061610254556755,
+            "brier": 0.2093526814366255,
+            "accuracy": 0.6626016260162602
+          },
+          "raw_metrics": {
+            "log_loss": 0.6070131623936325,
+            "brier": 0.2096782282945317,
+            "accuracy": 0.6609756097560976
+          }
+        }
+      },
+      "extended_minus_base": {
+        "difference": -0.0035216993559278485,
+        "ci95": [
+          -0.009516666168737779,
+          0.0030071818923198593
+        ],
+        "method": "paired 7-day blocks; negative favors model; excludes training/selection uncertainty"
+      }
+    },
+    "2024-25": {
+      "split_counts": {
+        "train": 3540,
+        "tune": 470,
+        "calibration": 752,
+        "validation": 1230
+      },
+      "validation_coverage": 0.9382113821138212,
+      "models": {
+        "base": {
+          "metrics": {
+            "log_loss": 0.6070587746743263,
+            "brier": 0.21008283999806207,
+            "accuracy": 0.6666666666666666
+          },
+          "raw_metrics": {
+            "log_loss": 0.6070436328817066,
+            "brier": 0.2100110287565541,
+            "accuracy": 0.6723577235772358
+          }
+        },
+        "extended": {
+          "metrics": {
+            "log_loss": 0.6024428686561621,
+            "brier": 0.20806002198122778,
+            "accuracy": 0.6764227642276422
+          },
+          "raw_metrics": {
+            "log_loss": 0.6018997871300039,
+            "brier": 0.2078586084485199,
+            "accuracy": 0.6764227642276422
+          }
+        }
+      },
+      "extended_minus_base": {
+        "difference": -0.004615906018164154,
+        "ci95": [
+          -0.010907764245900956,
+          0.0010972272823280421
+        ],
+        "method": "paired 7-day blocks; negative favors model; excludes training/selection uncertainty"
+      }
+    }
+  },
+  "pooled": {
+    "base": {
+      "games": 3690,
+      "metrics": {
+        "log_loss": 0.6212584657613203,
+        "brier": 0.21607372505519154,
+        "accuracy": 0.6525745257452574
+      },
+      "raw_metrics": {
+        "log_loss": 0.6221361191437269,
+        "brier": 0.21646206905467733,
+        "accuracy": 0.6536585365853659
+      }
+    },
+    "extended": {
+      "games": 3690,
+      "metrics": {
+        "log_loss": 0.617189264304436,
+        "brier": 0.2142388261734532,
+        "accuracy": 0.6588075880758808
+      },
+      "raw_metrics": {
+        "log_loss": 0.6177380447852839,
+        "brier": 0.21452053049903402,
+        "accuracy": 0.6585365853658537
+      }
+    },
+    "extended_minus_base_log_loss": -0.004069201456884275
+  },
+  "code_sha256": "009510f0c82b7445f91af481e6cb51e8b73a5a156e24af57012e91c0d5ac4b73",
+  "data_sha256": {
+    "games.csv": "32d3037da5088ea9a726a2fc561b7fcb8a2230bef3007742f3602449df691d73",
+    "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2"
+  }
+}
