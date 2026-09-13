@@ -7,8 +7,11 @@ has been spent: the frozen logistic candidate beat Elo on 2025-26 by 0.008525 lo
 loss with an interval excluding zero. The project now has a prospective
 collection workflow ready for the 2026-27 season (opens 2026-10-20), a verified
 free source of historical injury reports, and a development result showing
-availability features help. No odds data exists in the project, no edge has been
-measured against any market, and nothing has been wagered or paid for.
+availability features help. One live odds payload has been captured and the ingestion
+path is proven, but no prices have been collected at a decision cutoff, no edge
+has been measured against any market, and nothing has been wagered or paid for.
+The audit section below covers work added by another session that the rest of
+this summary does not.
 
 ## What was done this session
 
