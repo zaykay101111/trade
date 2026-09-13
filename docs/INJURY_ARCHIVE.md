@@ -90,3 +90,50 @@ market's advantage over it. It is now buildable retrospectively across the
 training window, and the annotated extraction corpus that §14 requires for the
 evidence agents already exists rather than needing a season to accumulate. Both
 were previously blocked on data that turns out to be free.
+
+## Development result: availability counts DO help
+
+Archived 1,203 daily reports (the 05:30 PM ET slot, Dec 2020 - Jun 2025), parsed
+into 98,514 typed rows, and compared base features against base plus five
+declared-availability differentials (out, doubtful, questionable, probable, not
+submitted) and a coverage indicator, on the three existing development folds.
+
+| Feature set | Log loss | Brier | Accuracy |
+|---|---|---|---|
+| base (11) | 0.621258 | 0.216074 | 65.26% |
+| base + availability (17) | 0.617948 | 0.214537 | **66.12%** |
+
+Pooled **-0.003311**, improving in all three folds:
+
+| Fold | Base | Extended | Difference | 95% block interval |
+|---|---|---|---|---|
+| 2022-23 | 0.647034 | 0.645326 | -0.001708 | [-0.009326, +0.005578] |
+| 2023-24 | 0.609683 | 0.606388 | -0.003295 | [-0.008565, +0.002054] |
+| 2024-25 | 0.607059 | 0.602131 | -0.004928 | [-0.010097, -0.000384] excludes zero |
+
+For scale, the entire calibrated-logistic advantage over Elo was -0.008525 on the
+2025-26 holdout. Availability counts add roughly another third of that. Unlike the
+box-score extension, log loss and accuracy improve together, and the effect grows
+across folds rather than wandering.
+
+Coverage is 99.98% of development games, and unweighted counts ignore player
+impact entirely - a star and a two-way contract count the same - so this is a
+floor on what availability information is worth, not a ceiling.
+
+Two parser defects were found and fixed while producing this, both of which had
+silently corrupted the first run:
+
+1. Reports before roughly 2023 space their fields; later ones squash them.
+   Matching is now anchored on the comma-bearing player name and the status
+   keyword, so both layouts parse identically.
+2. A spaced surname suffix ("Porter Jr., Michael") was splitting, leaving "Porter"
+   as the team. That mismapped 10,413 of 98,514 rows; after the fix, 31 remain
+   (0.03%), almost all the legitimate "Non-NBA Team" designation.
+
+## What this does not yet justify
+
+These reports were BACKFILLED. They support development, and they do not
+establish what was visible before a past game. Adopting availability features for
+2026-27 therefore requires prospective capture from opening night - the same
+report, fetched before each cutoff and marked `prospective` in the index - and a
+NEW frozen release, since the forecast surface changes.

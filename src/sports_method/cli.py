@@ -10,6 +10,10 @@ def main():
     p=sub.add_parser("merge-settled", help="Fold newly settled games into a new rolling dataset")
     p.add_argument("--base", required=True);p.add_argument("--season-raw", required=True)
     p.add_argument("--out", required=True)
+    p=sub.add_parser("compare-availability", help="Development comparison: base features versus declared availability")
+    p.add_argument("--data", required=True);p.add_argument("--reports", required=True)
+    p.add_argument("--team-log", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--threads", type=int, default=2)
     p=sub.add_parser("compare-box", help="Development comparison: base features versus box-score extension")
     p.add_argument("--data", required=True);p.add_argument("--box", required=True)
     p.add_argument("--out", required=True);p.add_argument("--threads", type=int, default=2)
@@ -82,6 +86,9 @@ def dispatch(a):
     if a.command=="merge-settled":
         from .settle import merge_settled
         return merge_settled(a.base, a.season_raw, a.out)
+    if a.command=="compare-availability":
+        from .injury import compare_availability
+        return compare_availability(a.data, a.reports, a.team_log, a.out, a.threads)
     if a.command=="compare-box":
         from .free_box import compare_extension
         return compare_extension(a.data, a.box, a.out, a.threads)
