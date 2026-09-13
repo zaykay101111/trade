@@ -1,215 +1,132 @@
-# Session handoff — 2026-09-13
+# Handoff — current goal and state
 
-## State in one paragraph
+Written 2026-09-13. The goal is first; the state a fresh session needs is below it.
+The previous, narrative version is kept at `docs/HANDOFF_prior.md`.
 
-The odds-free NBA forecasting track is complete and its single reserved holdout
-has been spent: the frozen logistic candidate beat Elo on 2025-26 by 0.008525 log
-loss with an interval excluding zero. The project now has a prospective
-collection workflow ready for the 2026-27 season (opens 2026-10-20), a verified
-free source of historical injury reports, and a development result showing
-availability features help. One live odds payload has been captured and the ingestion
-path is proven, but no prices have been collected at a decision cutoff, no edge
-has been measured against any market, and nothing has been wagered or paid for.
-The audit section below covers work added by another session that the rest of
-this summary does not.
+---
 
-## What was done this session
+# CURRENT GOAL — NFL first
 
-### 1. Final holdout protocol, then the holdout itself
-- `docs/FINAL_PROTOCOL.md` — pre-registration: frozen candidate, chronology,
-  metric plan, freeze/one-use rules, and the four decisions taken.
-- `free_final.py` + `freeze-final` / `evaluate-final`. Guards: explicit
-  confirmation flag, code/data drift refusal, consumption marker claimed before
-  any label is read, no directory reuse, saved-model replay check, and a
-  `--dry-run` that fits everything and writes predictions with no outcome read.
-- **Result (one use, consumed):** calibrated logistic 0.606802 vs Elo 0.615328;
-  logistic − Elo −0.008525, 95% block interval [−0.016040, −0.001502], excludes
-  zero. Boosted − Elo includes zero. Replay difference 0.00e+00.
-- Development had predicted −0.0088; the holdout delivered −0.008525. The
-  method's own forecast of its out-of-sample performance held.
+The NFL season is live now; the NBA does not open until 2026-10-20. Get live
+prices recorded beside the paired forecasts that are already being issued, so
+the 2026 NFL season can answer which of control and challenger is better, and
+whether either beats the market.
 
-### 2. External replication (Walsh & Joshi, arXiv:2303.06021)
-- `free_external.py` + `replicate-external`; `docs/PAPER_ERA_COMPARISON.md`.
-- New dataset `nba-paper-era-v2` (2014-15…2018-19, 6,150 games) built from
-  nba_api, with scores from the schedule payload after verifying equivalence to
-  team logs on nba-v3 at 7,230/7,230, zero mismatches.
-- **Findings:** the constant home-rate predictor has the *lowest* ECE of any
-  model in both evaluated seasons (0.0103 and 0.0006) while being the worst
-  forecaster — the paper's selection metric would pick a useless model, which is
-  why they needed an admittedly arbitrary constraint. Log loss, already used
-  here, is the principled alternative. Their headline also fails their own
-  significance test (p=0.153). In their era our features add nothing over Elo.
+## Ordered work
 
-### 3. Prospective collection (the October 20 deadline)
-- `collect.py` + `collect-init` / `collect-refresh` / `collect-poll` /
-  `collect-status`, and `freeze-release` to produce a deployment bundle.
-- Records per poll: model probability, every book's two-sided price, de-vigged
-  probability and overround, a median reference excluding the execution book, the
-  raw payload, quota headers, and **each book's own `last_update` stored
-  separately from our retrieval time** — the distinction that makes a T−60 claim
-  defensible at all.
-- Collection only: no EV, stake, admission or wager is computed, asserted by test.
-- Guards: pending placeholder scores cannot reach features (year-2200
-  availability sentinel), polls keyed to the cutoff they serve so a scheduler
-  firing repeatedly costs one request, late polls collect nothing, thin book
-  coverage abstains, forecast-surface drift halts forecasting.
-- `settle.py` + `merge-settled` folds newly completed games into a new dataset so
-  Elo and rolling windows keep advancing through the season.
-- **2026-27 plan:** 1,200 games collectible, 6 Cup rows held back pending team
-  assignment, 773 poll times, peak 162 credits/month against a 500 free cap.
+1. **Audit the NFL track before trusting it.** It was written in one commit
+   (`0d8d451`) and has not been independently reviewed. Verify no future
+   information can reach a forecast, that recorded snapshots are immutable and
+   never backdated, and that ties are handled correctly in both the probability
+   and the push arithmetic. Report what you find, including anything wrong.
+2. **Add odds capture to the NFL poll at the SAME cutoff as the forecast.**
+   Store each book's own `last_update` separately from our retrieval time. One
+   request costs markets x regions; 115 remaining kickoffs is ~115 credits for
+   the season against a 500/month cap.
+3. **Market reference.** Proportional de-vig (`u = 1/d`, `q = u/Σu`), median of
+   at least three books, execution book excluded from its own reference, abstain
+   below three and record why. NFL moneyline is two-way with a PUSH, so de-vig
+   must not silently assume the two prices span the whole outcome space.
+4. **Schedule the poll** so every remaining kickoff is covered. Prove one full
+   game day end to end before relying on it.
+5. **Weekly:** settle, then report control vs challenger vs market on decided
+   games only, with week-block intervals. Report negative results as prominently
+   as positive ones.
 
-### 4. Data sourcing costs
-- `docs/DATA_SOURCING.md`, priced from measured volume (4,457 distinct tip times
-  across six seasons, not an estimate).
-- Prospective collection is free. A one-month historical backfill is $59 for US
-  books at T−60, or $119 for the three-region paired-snapshot design already in
-  `data/odds-plan.json`. One-off; the data may be kept after cancelling.
-- Free historical closing odds exist (2007-08…2022-23) but are single-source and
-  untimestamped: literature comparison only.
+## Constraints
 
-### 5. Features tested
-- **Box-score extension (9 possession-adjusted features): rejected.** Pooled
-  +0.000789 log loss (worse) over 3,690 development games, every fold interval
-  including zero, while accuracy rose 65.26% → 65.50%. Selecting on accuracy would
-  have adopted a worse forecaster.
-- **Availability (declared injury status): helps.** See below.
+- Free tier only. No paid calls, subscriptions or betting without explicit
+  authorisation. `ODDS_API_KEY` is in the environment: read from `os.environ`
+  only, never print or commit it.
+- Never place, recommend or simulate as real any wager. Paper records only.
+- **Do not open the 2025 NFL holdout.** The criteria to do so were not met.
+- **Do not change the NBA forecast surface** (`free_data`, `model`, `collect`,
+  `io`). The frozen NBA release must stay valid for 2026-10-20.
+- Preserve existing data and runs; always write to new output directories.
+- Run `pytest` before and after. Add tests for leakage, ties, quota, duplicate
+  polls, and immutability of recorded snapshots.
 
-### 6. Injury reports — the significant finding
-- Official NBA injury report PDFs are retrievable **for past dates**, hourly,
-  roughly 2019-01 to 2025-12 (2026 dates return 403 at every hour swept). This
-  corrects an earlier assumption that injury history could only be captured
-  forward. Structured, machine-readable, with Out/Doubtful/Questionable/Probable
-  rather than the actual-absence proxy that would leak.
-- `scripts/archive_injury_reports.py` stores PDFs verbatim with a hashed index and
-  records whether each file was backfilled or captured prospectively.
-- `injury.py` + `parse-injuries` / `compare-availability`.
-- **Development result (CONFIRMED on two machines):** base 0.621258 vs 0.617948
-  with availability, pooled −0.003311, improving in all three folds, 2024-25
-  excluding zero. Accuracy 65.26% → 66.12%. Counts are unweighted — no player
-  impact data — so this is a floor on the feature group's value.
+## Honest limit
 
-## Bugs found and fixed this session
+272 NFL games a season against 1,230 NBA. One NFL season cannot establish an
+edge — it can show the pipeline works live, and it can rule the model out. Say
+so in every report.
 
-| Bug | Consequence | Status |
-|---|---|---|
-| `postponedStatus='A'` on four whole seasons of 2014-19 schedules | 4 of 5 seasons dropped; only 1,230 of 6,150 games downloaded | diagnosed season by season, `--include-postponed` used with evidence |
-| Year-2999 availability sentinel | pandas cannot represent it; collector crashed | moved to 2200 |
-| Polls keyed by wall-clock time | a cron firing every 5 min would buy the same snapshot repeatedly | keyed to the cutoff served |
-| Drift gate covering the whole package | an unrelated research edit would halt a nine-month collection | gated on the forecast surface only |
-| `collect-init` planning polls for NBA Cup rows with team id 0 | would forecast games with no teams | held back in `pending_assignment.csv`; `collect-refresh` added |
-| Mixed ISO/space timestamps across merged CSVs | strict parsing failed | normalised on write; loader untouched |
-| Injury parser: two report layouts | pre-2023 reports parsed to zero rows | anchored on player + status, both layouts |
-| Injury parser: spaced surname suffixes | "Porter Jr., Michael" left "Porter" as the team; 10,413 of 98,514 rows mismapped | fixed, 31 remain (legitimate "Non-NBA Team") |
-| `pdfplumber` undeclared, ImportError caught per file | one missing module reported 1,215 times | declared as `[pdf]` extra, fail-fast |
-| **`parse_lines` refactor reset state per page** | matchup lost at every page break; 98,514 rows → 81,605; availability result weakened −0.0033 → −0.0024 | fixed, single-pass parse, regression test added |
+---
 
-The last one is the important one: a refactor done for testability silently
-changed a headline result. It was caught only because Kyler's run disagreed with
-mine on the same files. **Both numbers were reported before the disagreement was
-understood — the −0.0024 figure is from the broken parser and should be discarded.**
+# STATE
 
-## Availability result — confirmed
+## NFL (verified 2026-09-13)
 
-Re-run with the fixed parser on both machines, `runs/avail-v2`:
+- 6,991 games, 2000–2027. Contract: `nfl_regular_fullgame_moneyline_ot_tie_push`
+  — a tie returns the stake.
+- Development folds 2022–24; **2025 RESERVED**; 2026 prospective.
+- **The challenger FAILED its pre-registered advancement criteria.** Pooled
+  decided log loss 0.644140 vs Elo 0.659247, but Elo wins the 2024 fold
+  (0.622441 vs 0.632872) and the paired interval [−0.030797, +0.000159] includes
+  zero. `Advancement criteria met: False (stronger baseline: elo)`. Elo is the
+  stronger baseline. The challenger is not the deployed model.
+- Paired prospective recording is LIVE: snapshots in
+  `collection/nfl-pair-v1/recorded`, control and challenger three-way
+  probabilities, issued at kickoff minus 60.
+- 262 of 272 games remain, across 115 distinct kickoff times.
+- Commands: `nfl-train`, `nfl-compare-qb`, `nfl-freeze`, `nfl-collect-init`,
+  `nfl-collect-refresh`, `nfl-poll`, `nfl-status`, `nfl-settle`.
 
-| Fold | Base | Extended | Difference |
-|---|---|---|---|
-| 2022-23 | 0.647034 | 0.645326 | -0.001708 |
-| 2023-24 | 0.609683 | 0.606388 | -0.003295 |
-| 2024-25 | 0.607059 | 0.602131 | -0.004928 (interval excludes zero) |
-| pooled | 0.621258 | 0.617948 | **-0.003311** |
+## NBA
 
-Kyler's machine (Python 3.12, 99,891 rows from 1,215 reports) and the sandbox
-(Python 3.11, 98,514 rows from 1,203) agree on the pooled figure to ten
-significant digits: -0.0033105290 versus -0.0033105297. The row-count difference
-is the 12 extra reports from the three-slot test. Cross-environment agreement is
-what the earlier disagreement was missing, and it is what makes this result
-trustworthy rather than merely favourable.
+- Odds-free forecaster complete. The single reserved holdout (2025-26) was
+  pre-registered, frozen and **spent once**: calibrated logistic 0.606802 vs Elo
+  0.615328, difference −0.008525, 95% block interval [−0.016040, −0.001502],
+  excludes zero. Development had predicted −0.0088.
+- 2025-26 is now development data. Next clean confirmatory season is 2026-27.
+- Availability features (injury-report status counts) confirmed on two machines:
+  pooled **−0.003311**, improving in all three folds, 2024-25 excluding zero.
+  **Not yet adopted** — adoption needs a new frozen release and prospective
+  capture from opening night, since backfilled reports cannot establish what was
+  visible before a game. Counts are unweighted, so this is a floor;
+  `player_impact.py` is the right next step.
+- Box-score features tested and **REJECTED**: pooled +0.000789, worse.
+- `runs/release-2026-27-v2` is VALID (forecast surface `393f959d…`).
+  `runs/release-2026-27` is stale — delete it.
+- `collection/2026-27`: 1,200 games, 6 Cup rows awaiting team assignment, 773
+  planned polls, **0 executed**.
+- Injury archive: 1,215 reports, ~2019-01 to 2025-12, retrievable for past dates.
+- **Deadline 2026-10-20.** Anything frozen after opening night cannot count for
+  the 2026-27 season.
 
-## Audit, 2026-09-13 (later the same day)
+## Shared
 
-Work landed from another session in commit `0d8d451`, "nba pre agentic finished
-and nfl added" - roughly 1,900 lines not reviewed in this handoff:
+- One live odds payload captured: `data/raw/odds-live-20260913T193307Z`, 41 NBA
+  events, h2h, 5 books. Ingestion path proven; **no prices collected at a
+  decision cutoff yet**.
+- Events in that sample carry 1–5 books. The reference rule needs ≥3 excluding
+  the execution book, so thin events will abstain. Re-measure closer to the season.
+- `docs/GATE_B.md` is the Gate B pre-registration, written before qualifying data
+  existed. Commit it — an uncommitted pre-registration has no verifiable timestamp.
+- Remote: github.com/zaykay101111/trade.
 
-- A full NFL track: `nfl_train`, `nfl_collect`, `nfl_data`, `nfl_qb`,
-  `nfl_policy`, `nfl_monitor`, plus `collection/nfl-2026` and `nfl-pair-v1`.
-- `player_impact.py` - weights declared statuses by prior minutes. This is the
-  right next step: the availability result above uses UNWEIGHTED counts, so a
-  star and a two-way contract count the same, and -0.003311 is a floor.
-- `challenger.py`, `agents.py` (a seam, not agents yet), `pair_monitor.py`.
-- `docs/GATE_B.md` - the Gate B pre-registration, written before any qualifying
-  data exists. Correct discipline, but UNTRACKED, so it carries no verifiable
-  timestamp until committed.
-- `tests/test_odds_ingestion.py` - runs the ingestion code over a real saved
-  payload rather than synthetic events.
+## Open decisions
 
-Verified during the audit:
+1. Adopt availability into the NBA candidate? Recommended yes.
+2. Execution book label — needed only as a string, no account required.
+3. $59/$119 odds backfill — not authorised.
+4. Commit the untracked work; delete the stale release.
 
-- **Live odds ingestion works.** `data/raw/odds-live-20260913T193307Z` holds a
-  real payload: 41 NBA events, h2h market, 5 books (betmgm, betrivers, bovada,
-  draftkings, fanduel). First event is Pistons vs Celtics at
-  2026-10-20T19:00:00Z, matching the schedule exactly.
-- **The drift gate held.** The NFL work touched none of the four gated modules,
-  so `runs/release-2026-27-v2` is still VALID (surface `393f959d...`).
-  `runs/release-2026-27` has no surface hash and is stale - delete it.
-- **Nothing has run.** `collection/2026-27` has 1,200 games and 773 planned
-  polls, and 0 executed polls, 0 quotes recorded.
-- **A git remote now exists**: github.com/zaykay101111/trade.
-- **Book coverage may force abstentions.** Events in the sample carry between 1
-  and 5 books; the reference rule needs at least 3 excluding the execution book.
-  That sample is five weeks pre-season, so treat it as a floor and re-measure in
-  October. A high abstention rate directly shrinks the Gate B sample.
+## Bugs found and fixed (worth knowing)
 
-Risk worth stating: the NFL expansion doubled the maintenance surface 37 days
-before a hard deadline, while the NBA track still has zero polls executed and an
-unadopted feature set. The blueprint puts expansion after a developed
-single-sport platform, one sport at a time.
+Provider status codes marking four whole seasons as postponed; a year-2999
+timestamp pandas cannot represent; polls keyed by wall-clock time that would
+have double-charged the quota; a drift gate broad enough to halt a season;
+NBA Cup rows with team id 0; mixed timestamp spellings; two injury-report
+layouts; surname suffixes mismapping 10.6% of rows; an undeclared dependency
+reported once per file; and a refactor that silently changed a headline result
+from −0.0033 to −0.0024.
 
-## Current goal
+**That last one was caught only because two machines disagreed.** Reproduce
+results independently before trusting them.
 
-Finish the pipeline and optimise the feature set honestly - adding AND removing -
-then build the agent layer behind measurable gates. The working prompt for this
-phase is in the conversation; its three parts are:
+## What is NOT established
 
-1. **Feature optimisation.** Pre-register the search in `docs/FEATURE_SEARCH.md`
-   BEFORE running it: candidate pool, selection rule, stopping rule. Add
-   candidates (player-weighted availability first, then rest/travel interactions
-   and schedule spots) and remove candidates (`neutral`, `history_count_diff`,
-   and `scored_diff`/`allowed_diff` if `margin_diff` already carries them).
-   Select only on each fold's tuning period, never on validation. Report every
-   variant including the losers. Adopt nothing without a new frozen release.
-2. **Finish the pipeline.** Wire availability in if the search keeps it,
-   re-freeze, add prospective injury capture marked `prospective`, schedule the
-   three jobs, and prove one full slate end to end before opening night.
-3. **Agent layer.** The four blueprint roles, with an annotated extraction set,
-   precision/recall intervals, and an agent-on versus agent-off comparison
-   BEFORE any agent touches a forecast. The extractor schema carries no
-   probability or stake field.
-
-A slide deck explaining the pipeline and its usage was produced this session
-(`nba-forecasting-pipeline.pptx`, delivered in chat, not committed).
-
-## Open decisions (all blocking)
-
-1. **Adopt availability into the frozen candidate?** Recommended yes. Requires a
-   new frozen release and prospective capture from opening night.
-2. **Execution book label** - needed only as a string, so it can be excluded from
-   its own reference. No account required.
-3. **$59/$119 odds backfill** - not authorised.
-4. **Commit the untracked work**: `docs/GATE_B.md`, `tests/test_odds_ingestion.py`,
-   the `test_nfl_prospective.py` edit, `collection/nfl-pair-v1/`. Delete the stale
-   `runs/release-2026-27`.
-5. **Freeze NFL scope** until the NBA collector is running.
-
-## Deadline
-
-**2026-10-20.** Required before it: results-refresh loop wired, collector live
-with cron, and a candidate frozen. Anything not frozen before opening night
-cannot count for the 2026-27 season.
-
-## What is still NOT established
-
-No market edge, no ROI, no executable price, nothing wagered, nothing paid. The
-2025-26 holdout is spent and cannot be reused. The paper-era and development
-folds have been inspected repeatedly and are development evidence only. The next
-clean confirmatory season is 2026-27, and only if a candidate is frozen first.
+No market edge, no ROI, no executable price, no profitability, nothing wagered,
+nothing paid for. Forecasting gains do not establish a betting edge.
