@@ -188,16 +188,58 @@ Required tests before the protocol is executed:
    (the current guards must remain intact, not be relaxed).
 7. Saved-model replay reproduces the recorded holdout predictions exactly.
 
-## 6. Open decisions requiring sign-off before freezing
+## 6. Decisions taken (2026-09-13)
 
-1. Confirm the final chronology in section 2 (train through 2024-07-01, tune to
-   2025-01-01, calibrate 2025-01-01 to 2025-07-01). The alternative, refitting on
-   everything through 2025-07-01 with a shorter calibration slice, would use more
-   data but would no longer match the development folds.
-2. Confirm boosted stays a secondary comparator rather than being dropped.
-3. Confirm the delay diagnostics (24h / 48h) run inside the same one-use
-   evaluation, or are omitted entirely.
-4. Confirm whether the repository is placed under git before the freeze.
+All four were settled before any code was written; none may be revisited after
+the holdout is scored.
 
-Nothing in this document is executed until items 1-4 are answered and the freeze
-command is run deliberately.
+1. Chronology: match the development folds exactly (section 2). Rejected the
+   longer-training alternative because every existing validation number was
+   produced under this shape, and a different final shape would make the holdout
+   result ambiguous.
+2. Boosted: retained as a SECONDARY comparator. Dropping a model that lost in
+   development, then reporting only the winner, would be selective reporting.
+   Secondary means it cannot become the headline regardless of how it lands.
+3. Delay diagnostics: 24h and 48h scenarios run INSIDE the single evaluation,
+   labelled exploratory. They are written in one execution before any result is
+   seen, so they add information without adding attempts.
+4. Version control: repository initialised, commit `9fcd192`, working tree clean.
+   The frozen `code_sha256` therefore maps to a recoverable tree.
+
+## 7. Implementation
+
+`src/sports_method/free_final.py`, commands `sports freeze-final` and
+`sports evaluate-final`. The odds-based `freeze` / `evaluate` commands are
+untouched and unusable here; they expect odds columns and another bundle schema.
+
+```bash
+source .venv/bin/activate
+python -m pytest -q
+sports freeze-final --data data/normalized/nba-v3 --out runs/final-v1
+sports evaluate-final --run runs/final-v1 --dry-run --threads 2
+# then, only after explicit approval:
+sports evaluate-final --run runs/final-v1 --yes-consume-final-holdout --threads 2
+sports report --path runs/final-v1/holdout
+```
+
+Guards implemented:
+
+- `evaluate-final` refuses without `--yes-consume-final-holdout`.
+- It refuses if `code_sha256` or the dataset hashes drifted from `freeze.json`.
+- `HOLDOUT_CONSUMED.json` is written with `open("x")` before any holdout label is
+  read, so a crash still spends the attempt; the run directory cannot be reused.
+- `--dry-run` fits the full pipeline and writes holdout PREDICTIONS ONLY: no
+  outcome is read, no metric computed, no marker written, and the dry-run feature
+  table is truncated at the holdout boundary. Use it to prove the run works
+  before spending the holdout.
+- Holdout features are built in one pass over the whole dataset, so Elo and
+  rolling history keep updating inside 2025-26 in availability order. The
+  development commands still refuse any boundary at or past 2025-07-01.
+- The written bundle must reproduce the written predictions to 1e-12 or the run
+  fails rather than emitting an unreproducible record.
+
+Tests: `tests/test_free_final.py` covers leakage under perturbed later outcomes,
+availability and disjointness of every fitting stage, unchanged development
+guards, refusal without confirmation, refusal on dataset drift, the
+freeze -> dry-run -> single-scored-use sequence, saved-model replay, and refusal
+of a second evaluation. All pass alongside the existing suite.

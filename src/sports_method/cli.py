@@ -7,6 +7,12 @@ from .io import read_json
 def main():
     parser=argparse.ArgumentParser(description="NBA first-model research and paper monitoring")
     sub=parser.add_subparsers(dest="command",required=True)
+    p=sub.add_parser("freeze-final", help="Pre-register the one-use odds-free final-holdout protocol")
+    p.add_argument("--data", required=True);p.add_argument("--out", required=True)
+    p=sub.add_parser("evaluate-final", help="Score the reserved 2025-26 holdout once against a freeze record")
+    p.add_argument("--run", required=True);p.add_argument("--threads", type=int, default=2)
+    p.add_argument("--dry-run", action="store_true", help="Fit and predict without reading any holdout outcome")
+    p.add_argument("--yes-consume-final-holdout", action="store_true", help="Required to score; irreversible")
     p=sub.add_parser("regularize-free", help="Chronological four-value logistic penalty check")
     p.add_argument("--data", required=True);p.add_argument("--out", required=True)
     p=sub.add_parser("correct-venues", help="Apply six reviewed neutral-venue overrides into a new dataset")
@@ -42,6 +48,13 @@ def main():
         print("ERROR: "+str(exc),file=sys.stderr);raise SystemExit(2)
 
 def dispatch(a):
+    if a.command=="freeze-final":
+        from .free_final import freeze_final
+        return freeze_final(a.data, a.out)
+    if a.command=="evaluate-final":
+        from .free_final import evaluate_final
+        return evaluate_final(a.run, a.threads, dry_run=a.dry_run,
+                              confirmed=a.yes_consume_final_holdout)
     if a.command=="regularize-free":
         from .free_regularize import regularize_free
         return regularize_free(a.data, a.out)

@@ -178,3 +178,36 @@ independent evidence of improvement. Paired weekly-block intervals exclude
 training/selection uncertainty and multiplicity. Do not expand the grid because
 a validation result is disappointing or assume global shrinkage specifically
 solves sparse neutral-site estimation. Neutral counts are reported for context.
+
+## Final-holdout freeze and one-use evaluation
+
+The 2025-26 season is scored exactly once, against a protocol frozen first.
+Full specification and the decisions behind it: `docs/FINAL_PROTOCOL.md`.
+
+```bash
+sports freeze-final --data data/normalized/nba-v3 --out runs/final-v1
+sports evaluate-final --run runs/final-v1 --dry-run --threads 2
+sports evaluate-final --run runs/final-v1 --yes-consume-final-holdout --threads 2
+sports report --path runs/final-v1/holdout
+```
+
+`freeze-final` writes only `freeze.json`: candidate specification, boundaries,
+metric plan, data and code hashes, dependency versions. It computes no
+prediction and no metric. `evaluate-final --dry-run` fits the whole pipeline and
+writes holdout predictions with no outcomes read and no metrics computed, so a
+failure costs nothing. The scored run refuses without the explicit flag, refuses
+on any code or data drift from the freeze record, claims `HOLDOUT_CONSUMED.json`
+before reading a single label, and cannot be repeated in the same run directory.
+
+The frozen candidate is the full-feature logistic model at lambda 0.01 with
+sigmoid calibration; home-rate and Elo are comparators and boosted trees are a
+declared secondary. Training runs through 2024-07-01, tree tuning through
+2025-01-01, refit on train plus tune, calibration 2025-01-01 to 2025-07-01 —
+the same shape as the three rolling development folds. Extra availability delays
+of 24h and 48h are exploratory and run inside the same single evaluation.
+
+One confirmatory comparison is declared in advance: calibrated logistic minus
+Elo paired log-loss difference with a weekly-block interval. Everything else is
+secondary or exploratory. Nothing produced here is evidence of a betting edge;
+that still requires timestamped, executable multi-book prices at the prediction
+cutoff, which this project does not have.
