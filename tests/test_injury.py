@@ -181,3 +181,16 @@ def test_missing_parser_fails_once_not_per_file(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match='pdfplumber is required'):
         parse_to_csv(archive, tmp_path/'out.csv')
     assert not (tmp_path/'out.csv').exists()
+
+
+def test_matchup_carries_across_a_page_break():
+    """A game's rows continue onto the next page without repeating the matchup."""
+    page_one = SQUASHED[:4]
+    page_two = ["Injury Report: 11/05/25 05:30 PM", "Johnson,Keon Out Injury/Illness-LeftKnee"]
+    split = pd.DataFrame(parse_lines(page_one+page_two))
+    assert len(split) == 3
+    assert split.iloc[-1].player == "Johnson,Keon"
+    assert split.iloc[-1].matchup == "BKN@IND"
+    # Parsing each page independently loses that row: the regression this guards.
+    separate = pd.DataFrame(parse_lines(page_one)+parse_lines(page_two))
+    assert len(separate) == 2

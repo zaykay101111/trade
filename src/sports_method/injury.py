@@ -88,13 +88,17 @@ def parse_lines(lines):
 def parse_report(pdf_path):
     """Rows of (game, team, player, status) plus the report's own timestamp."""
     import pdfplumber
-    rows, stamp = [], None
+    lines, stamp = [], None
     with pdfplumber.open(pdf_path) as pdf:
         for page in pdf.pages:
             text = page.extract_text() or ""
             if stamp is None:
                 stamp = report_time(text)
-            rows.extend(parse_lines(text.splitlines()))
+            lines.extend(text.splitlines())
+    # One pass over the whole document: a game's rows continue across a page
+    # break, so parsing page by page would drop every row before the next time
+    # the matchup is printed.
+    rows = parse_lines(lines)
     frame = pd.DataFrame(rows)
     if not frame.empty:
         frame["team"] = frame.team.astype(str).str.replace(" ", "", regex=False)
