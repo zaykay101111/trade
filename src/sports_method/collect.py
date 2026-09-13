@@ -335,9 +335,22 @@ def poll(collection, bundle_dir, data, *, at=None, regions=DEFAULT_REGIONS,
                                         dtype={"game_id": str, "home_id": str, "away_id": str}),
                             ("scheduled_at", "decision_at", "schedule_observed_at"))
     targets = schedule[(schedule.decision_at-at).abs() <= pd.Timedelta(minutes=window_minutes)].copy()
-    poll_id = at.isoformat().replace(":", "").replace("+", "_")
     if targets.empty:
-        return {"poll_id": poll_id, "status": "no games at this cutoff", "games": 0}
+        return {"poll_id": None, "status": "no games at this cutoff", "games": 0}
+    # Identify the poll by the cutoff it serves. A scheduler firing every few
+    # minutes hits the same window repeatedly; keying on wall-clock time would
+    # buy the same snapshot twice.
+    served_path = collection/"served_cutoffs.csv"
+    served = set()
+    if served_path.exists():
+        served = set(pd.read_csv(served_path).cutoff.astype(str))
+    targets["cutoff"] = targets.decision_at.map(lambda t: pd.Timestamp(t).isoformat())
+    outstanding = targets[~targets.cutoff.isin(served)]
+    if outstanding.empty:
+        return {"poll_id": None, "status": "cutoff already served; records are append-only",
+                "games": 0, "cutoffs_already_served": sorted(set(targets.cutoff))}
+    targets = outstanding
+    poll_id = min(targets.cutoff).replace(":", "").replace("+", "_")
     settled = load_games(data)
     pending = targets.copy()
     pending["neutral"] = pending.is_neutral.astype(str).str.lower().isin(("true", "1")).astype(int)
@@ -374,8 +387,11 @@ def poll(collection, bundle_dir, data, *, at=None, regions=DEFAULT_REGIONS,
     for row in quarantine:
         row.update({"poll_id": poll_id, "retrieved_at": at.isoformat()})
     _append(collection/"quarantine.csv", quarantine)
-    ledger = {"poll_id": poll_id, "planned_at": (due_polls(collection, at, window_minutes) or [None])[0],
-              "executed_at": at.isoformat(), "regions": regions, "events_returned": len(body),
+    _append(served_path, [{"cutoff": c, "poll_id": poll_id, "executed_at": at.isoformat()}
+                          for c in sorted(set(targets.cutoff))])
+    ledger = {"poll_id": poll_id, "cutoffs_served": len(set(targets.cutoff)),
+              "planned_at": min(targets.cutoff), "executed_at": at.isoformat(),
+              "seconds_late": round((at-pd.Timestamp(min(targets.cutoff))).total_seconds(), 1), "regions": regions, "events_returned": len(body),
               "games_targeted": len(targets), "games_matched": len(matched),
               "quarantined": len(quarantine), "quotes_recorded": len(quote_rows),
               "references_with_enough_books": sum(r["reference_q_home"] is not None for r in reference_rows),

@@ -1,0 +1,7 @@
+game_id,home_id,away_id,home_name,away_name,scheduled_at,schedule_observed_at,decision_at,season_type,contract,is_neutral,source_status
+0022601201,0,0,,,2026-12-04 05:00:00+00:00,2026-12-02 05:00:00+00:00,2026-12-04 04:00:00+00:00,regular,nba_regular_fullgame_moneyline_ot,False,TBD
+0022601202,0,0,,,2026-12-04 05:00:00+00:00,2026-12-02 05:00:00+00:00,2026-12-04 04:00:00+00:00,regular,nba_regular_fullgame_moneyline_ot,False,TBD
+0022601203,0,0,,,2026-12-05 05:00:00+00:00,2026-12-03 05:00:00+00:00,2026-12-05 04:00:00+00:00,regular,nba_regular_fullgame_moneyline_ot,False,TBD
+0022601204,0,0,,,2026-12-05 05:00:00+00:00,2026-12-03 05:00:00+00:00,2026-12-05 04:00:00+00:00,regular,nba_regular_fullgame_moneyline_ot,False,TBD
+0022601229,0,0,,,2026-12-08 05:00:00+00:00,2026-12-06 05:00:00+00:00,2026-12-08 04:00:00+00:00,regular,nba_regular_fullgame_moneyline_ot,False,TBD
+0022601230,0,0,,,2026-12-08 05:00:00+00:00,2026-12-06 05:00:00+00:00,2026-12-08 04:00:00+00:00,regular,nba_regular_fullgame_moneyline_ot,False,TBD

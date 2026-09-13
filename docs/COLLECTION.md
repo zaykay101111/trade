@@ -81,6 +81,27 @@ times costs ~124 credits per month against the 500 free cap.
 progresses; pending games are forecast from it. Elo and rolling history continue
 to update as results become available, exactly as in evaluation.
 
+## Scheduling
+
+A poll serves the CUTOFF it falls near, not the clock time it ran at, and every
+served cutoff is recorded in `served_cutoffs.csv`. A scheduler that fires every
+few minutes therefore costs one request per cutoff no matter how many times it
+runs inside the window: a repeat is a no-op, not an error, and never reaches the
+provider. Lateness is recorded on every poll as `seconds_late`.
+
+That makes a plain cron entry safe. Most invocations match no game, return
+immediately, and spend nothing:
+
+```cron
+*/5 * * * * cd "/Users/kylerzook2005/Documents/Personal Projects/Sports Betting Method" && \
+  .venv/bin/sports collect-poll --collection collection/2026-27 \
+  --bundle runs/release-2026-27 --data data/normalized/nba-v3 --execute \
+  >> logs/collect.log 2>&1
+```
+
+Keep `ODDS_API_KEY` in the launchd/cron environment or a sourced profile, never
+in the command line or in any file that is committed.
+
 ## What is recorded
 
 | File | Contents |

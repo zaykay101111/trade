@@ -167,10 +167,20 @@ def test_poll_records_forecasts_quotes_and_reference(tmp_path):
 
 
 def test_repeat_poll_refused(tmp_path):
+    """A repeat is a no-op, not a crash: a scheduler must survive its own retries."""
     settled, pending = settled_and_pending(tmp_path)
     collection = collection_for(tmp_path, pending)
     bundle = bundle_for(tmp_path)
     poll(collection, bundle, tmp_path, at=CUTOFF, execute=True, fetcher=fake_payload())
+
+    def explode():
+        raise AssertionError('a served cutoff must not reach the provider')
+
+    again = poll(collection, bundle, tmp_path, at=CUTOFF, execute=True, fetcher=explode)
+    assert again['games'] == 0 and 'already served' in again['status']
+    assert len(pd.read_csv(tmp_path/'collection'/'polls.csv')) == 1
+    # The raw-payload guard remains as a backstop if served_cutoffs.csv is lost.
+    (tmp_path/'collection'/'served_cutoffs.csv').unlink()
     with pytest.raises(FileExistsError, match='already recorded'):
         poll(collection, bundle, tmp_path, at=CUTOFF, execute=True, fetcher=fake_payload())
 
@@ -336,3 +346,31 @@ def test_identical_team_ids_rejected(tmp_path):
     bad.to_csv(path, index=False)
     with pytest.raises(ValueError, match='identical team IDs'):
         initialise(path, tmp_path/'bad-collection', '2026-27')
+
+
+def test_scheduler_firing_twice_in_one_window_pays_once(tmp_path):
+    """A cron running every few minutes must not buy the same cutoff twice."""
+    settled, pending = settled_and_pending(tmp_path)
+    collection = collection_for(tmp_path, pending)
+    bundle = bundle_for(tmp_path)
+    first = poll(collection, bundle, tmp_path, at=CUTOFF-pd.Timedelta(minutes=3),
+                 execute=True, fetcher=fake_payload(), window_minutes=5)
+    assert first['games_matched'] == 1
+    second = poll(collection, bundle, tmp_path, at=CUTOFF+pd.Timedelta(minutes=2),
+                  execute=True, fetcher=fake_payload(), window_minutes=5)
+    assert second['games'] == 0 and 'already served' in second['status']
+    polls = pd.read_csv(tmp_path/'collection'/'polls.csv')
+    assert len(polls) == 1
+    served = pd.read_csv(tmp_path/'collection'/'served_cutoffs.csv')
+    assert len(served) == 1
+    assert abs(float(polls.seconds_late.iloc[0]) + 180) < 1
+
+
+def test_lateness_is_recorded(tmp_path):
+    settled, pending = settled_and_pending(tmp_path)
+    collection = collection_for(tmp_path, pending)
+    bundle = bundle_for(tmp_path)
+    ledger = poll(collection, bundle, tmp_path, at=CUTOFF+pd.Timedelta(minutes=4),
+                  execute=True, fetcher=fake_payload(), window_minutes=5)
+    assert ledger['seconds_late'] == pytest.approx(240, abs=1)
+    assert ledger['planned_at'].startswith('2026-10-20T23:00')
