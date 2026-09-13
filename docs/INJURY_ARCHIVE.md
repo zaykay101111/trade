@@ -64,6 +64,19 @@ the slots and seasons you actually need rather than everything.
 Add `--prospective` when capturing near real time; the index then marks those
 files as prospective rather than backfilled.
 
+## Parsing
+
+```bash
+sports parse-injuries --archive data/injury-archive --out data/injury-archive/parsed.csv
+```
+
+Resumable: already-parsed reports are skipped, so an interrupted run continues
+and a repeat run is a no-op. A malformed PDF is recorded in `failures` and never
+loses the work already written. Delete the CSV to reparse everything after a
+parser change. `--limit` and `--time-budget` bound a single run.
+
+Parsing roughly 1,200 reports takes about ten minutes.
+
 ## The caveat that decides what this data can support
 
 A file fetched today for a game in 2023 proves the report **exists**, not that it

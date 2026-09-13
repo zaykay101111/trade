@@ -176,6 +176,47 @@ def availability_counts(games, reports, lookup):
     return frame
 
 
+def parse_to_csv(archive, out, limit=None, time_budget=None, chunk=50):
+    """Parse an archive into one CSV, resumably.
+
+    Already-parsed sources are skipped, so an interrupted run continues where it
+    stopped and the command is safe to repeat. Parsing is separate from archiving
+    so it can be re-run against an unchanged record after a parser fix.
+    """
+    import time
+    archive, out = Path(archive), Path(out)
+    pdfs = sorted((archive/"pdf").glob("*.pdf"))
+    if not pdfs:
+        raise ValueError(f"No PDFs under {archive/'pdf'}")
+    done = set()
+    if out.exists():
+        done = set(pd.read_csv(out, usecols=["source"]).source.unique())
+    todo = [p for p in pdfs if p.name not in done]
+    if limit:
+        todo = todo[:limit]
+    started, buffer, failures, parsed = time.time(), [], [], 0
+    for path in todo:
+        try:
+            frame = parse_report(path)
+        except Exception as exc:                      # a malformed PDF must not lose prior work
+            failures.append({"source": path.name, "error": str(exc)[:200]})
+            continue
+        if not frame.empty:
+            buffer.append(frame)
+            parsed += 1
+        if len(buffer) >= chunk:
+            pd.concat(buffer).to_csv(out, mode="a", header=not out.exists(), index=False)
+            buffer = []
+        if time_budget and time.time()-started > time_budget:
+            break
+    if buffer:
+        pd.concat(buffer).to_csv(out, mode="a", header=not out.exists(), index=False)
+    total = pd.read_csv(out, usecols=["source"]) if out.exists() else pd.DataFrame(columns=["source"])
+    return {"parsed_now": parsed, "already_parsed": len(done), "remaining": len(pdfs)-len(done)-parsed,
+            "reports_in_csv": int(total.source.nunique()), "rows_in_csv": len(total),
+            "failures": failures, "out": str(out),
+            "note": "Rerun to continue; parsed reports are never reparsed. Delete the CSV to reparse all."}
+
 AVAILABILITY_FEATURES = ["out_diff", "doubtful_diff", "questionable_diff", "probable_diff",
                          "not_submitted_diff", "availability_covered"]
 

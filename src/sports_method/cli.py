@@ -10,6 +10,9 @@ def main():
     p=sub.add_parser("merge-settled", help="Fold newly settled games into a new rolling dataset")
     p.add_argument("--base", required=True);p.add_argument("--season-raw", required=True)
     p.add_argument("--out", required=True)
+    p=sub.add_parser("parse-injuries", help="Parse an injury report archive into one resumable CSV")
+    p.add_argument("--archive", required=True);p.add_argument("--out", required=True)
+    p.add_argument("--limit", type=int);p.add_argument("--time-budget", type=float)
     p=sub.add_parser("compare-availability", help="Development comparison: base features versus declared availability")
     p.add_argument("--data", required=True);p.add_argument("--reports", required=True)
     p.add_argument("--team-log", required=True);p.add_argument("--out", required=True)
@@ -86,6 +89,9 @@ def dispatch(a):
     if a.command=="merge-settled":
         from .settle import merge_settled
         return merge_settled(a.base, a.season_raw, a.out)
+    if a.command=="parse-injuries":
+        from .injury import parse_to_csv
+        return parse_to_csv(a.archive, a.out, a.limit, a.time_budget)
     if a.command=="compare-availability":
         from .injury import compare_availability
         return compare_availability(a.data, a.reports, a.team_log, a.out, a.threads)
