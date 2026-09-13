@@ -1,0 +1,109 @@
+{
+  "created_at": "2026-09-13T05:32:39.915026+00:00",
+  "mode": "odds_free_final",
+  "warning": "Research only: no odds, ROI, stakes, or evidence of beating bookmakers. Schedule observation times are reconstructed; result availability assumes +24h after scheduled start. Historical revisions are not verified. Validation is development data; repeated optimization can overfit it.",
+  "data": "/Users/kylerzook2005/Documents/Personal Projects/Sports Betting Method/data/normalized/nba-v3",
+  "data_sha256": {
+    "games.csv": "32d3037da5088ea9a726a2fc561b7fcb8a2230bef3007742f3602449df691d73",
+    "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2",
+    "manifest.json": "4abaa63ebf6c6df0878974701f432646e9a212dc76ac121a5a1df318c72f2bf0"
+  },
+  "code_sha256": "13a835fd5f0dded149732a105e2a8f369b9b210ac8709e673b23c1271fb745a6",
+  "candidate": {
+    "primary": "logistic regression, all eleven features, lambda=0.01, sigmoid calibration",
+    "features": [
+      "margin_diff",
+      "scored_diff",
+      "allowed_diff",
+      "win_rate_diff",
+      "history_count_diff",
+      "home_rest",
+      "away_rest",
+      "home_b2b",
+      "away_b2b",
+      "elo_diff",
+      "neutral"
+    ],
+    "l2": 0.01,
+    "offset_q": 0.5,
+    "intercept_penalized": false,
+    "standardization": "mean/scale fitted on refit rows only",
+    "calibration": "single sigmoid (intercept + exp slope, L2 0.001) fitted on calibration period only",
+    "elo": {
+      "initial": 1500,
+      "k": 20,
+      "scale": 400,
+      "home_advantage": 65,
+      "season_reset": false
+    },
+    "rolling_window_settled_games": 20,
+    "rest_cap_days": 14,
+    "back_to_back_threshold_days": 1.5,
+    "cold_start": {
+      "scoring_averages": 0,
+      "win_rate": 0.5
+    },
+    "comparators": {
+      "home_rate": "constant home-win rate of the refit rows",
+      "elo": "fixed Elo probability, uncalibrated",
+      "boosted": "secondary; four predeclared candidates selected on the tune period"
+    },
+    "boosted_grid": [
+      {
+        "max_depth": 2,
+        "n_estimators": 100
+      },
+      {
+        "max_depth": 2,
+        "n_estimators": 250
+      },
+      {
+        "max_depth": 3,
+        "n_estimators": 100
+      },
+      {
+        "max_depth": 3,
+        "n_estimators": 250
+      }
+    ]
+  },
+  "boundaries_exclusive_utc": {
+    "start": "2020-07-01",
+    "train": "2024-07-01",
+    "tune": "2025-01-01",
+    "calibration": "2025-07-01",
+    "holdout": "2026-07-01"
+  },
+  "metric_plan": {
+    "primary": "calibrated logistic minus Elo paired log-loss difference, 95% seven-day block bootstrap (1000 resamples, seed 42)",
+    "secondary": [
+      "logistic minus home_rate paired difference",
+      "Brier and accuracy for all families",
+      "holdout calibration diagnostic (reported, never applied)",
+      "ten-bin reliability tables",
+      "raw versus calibrated challenger metrics",
+      "boosted minus Elo paired difference"
+    ],
+    "exploratory": [
+      "monthly log loss",
+      "neutral-site subset",
+      "extra result-availability delays of 24h and 48h"
+    ],
+    "rules": [
+      "Only the primary comparison is confirmatory.",
+      "Intervals exclude training and model-selection uncertainty and are not multiplicity-corrected.",
+      "No result here is evidence of a betting edge, ROI or executable price.",
+      "A disappointing result is not grounds to re-tune and re-score; the holdout is spent either way."
+    ]
+  },
+  "delays_hours": [
+    24,
+    48
+  ],
+  "counts": {
+    "total_games": 7230,
+    "development_games": 6000,
+    "reserved_holdout_games": 1230
+  },
+  "note": "Local tamper evidence and a one-use record, not an independent preregistration service. Scoring the holdout is irreversible: afterwards 2025-26 is development data and cannot back a fresh-holdout claim."
+}
