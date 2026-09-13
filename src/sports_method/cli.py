@@ -7,6 +7,12 @@ from .io import read_json
 def main():
     parser=argparse.ArgumentParser(description="NBA first-model research and paper monitoring")
     sub=parser.add_subparsers(dest="command",required=True)
+    p=sub.add_parser("merge-settled", help="Fold newly settled games into a new rolling dataset")
+    p.add_argument("--base", required=True);p.add_argument("--season-raw", required=True)
+    p.add_argument("--out", required=True)
+    p=sub.add_parser("compare-box", help="Development comparison: base features versus box-score extension")
+    p.add_argument("--data", required=True);p.add_argument("--box", required=True)
+    p.add_argument("--out", required=True);p.add_argument("--threads", type=int, default=2)
     p=sub.add_parser("freeze-release", help="Fit the frozen recipe for prospective deployment; scores nothing")
     p.add_argument("--data", required=True);p.add_argument("--out", required=True)
     p.add_argument("--train-end", required=True);p.add_argument("--tune-end", required=True)
@@ -73,6 +79,12 @@ def main():
         print("ERROR: "+str(exc),file=sys.stderr);raise SystemExit(2)
 
 def dispatch(a):
+    if a.command=="merge-settled":
+        from .settle import merge_settled
+        return merge_settled(a.base, a.season_raw, a.out)
+    if a.command=="compare-box":
+        from .free_box import compare_extension
+        return compare_extension(a.data, a.box, a.out, a.threads)
     if a.command=="freeze-release":
         from .collect import release
         return release(a.data, a.out, train_end=a.train_end, tune_end=a.tune_end,

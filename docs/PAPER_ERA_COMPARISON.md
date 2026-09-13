@@ -119,6 +119,41 @@ with the 2025-26 holdout where the same comparison also spanned zero. Across two
 untouched eras, the gradient-boosted challenger has never separated from a fixed
 Elo rating. That is a reason to keep it strictly secondary.
 
+## Testing the feature hypothesis (finding 4 above): it does not hold
+
+Their reported edge suggested box-score features carry information our
+margin/rest/Elo set lacks. `sports compare-box` tests that directly: the same
+eleven features versus the same set plus nine possession-adjusted differentials
+(offensive, defensive and net rating, pace, effective FG%, turnover rate,
+offensive rebound rate, free-throw rate, previous-season win rate), on the three
+existing development folds, with the same lambda, calibration and fold shape.
+
+Pooled over 3,690 development games:
+
+| Feature set | Log loss | Brier | Accuracy |
+|---|---|---|---|
+| base (11) | 0.621258 | 0.216074 | 65.26% |
+| extended (20) | 0.622048 | 0.216358 | 65.50% |
+
+Extended minus base: **+0.000789 pooled — slightly worse.** Per fold: +0.001103,
+-0.000095, +0.001360, and every 95% weekly-block interval includes zero.
+
+Two readings, both worth recording:
+
+1. **The features add nothing here.** Net rating and margin are close relatives,
+   and Elo already absorbs opponent-adjusted strength, so the extra columns are
+   largely redundant with what the base set encodes. Their apparent value in the
+   paper is more plausibly selection - 69.23% was the best of four models on the
+   season being reported - than information we were missing.
+2. **Accuracy rose while log loss fell.** 65.26% to 65.50% accuracy alongside a
+   worse probability score is the same lesson as the ECE finding, from the other
+   direction: the metric you select on decides what you conclude. Selecting on
+   accuracy here would have adopted a worse forecaster.
+
+The base feature set is therefore retained unchanged, and the deployment release
+frozen for 2026-27 stands. Nothing is promoted on the strength of development
+folds that have been inspected this many times.
+
 ## Reproducing
 
 ```bash
