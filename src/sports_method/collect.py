@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from .free_data import FEATURES, build_features, load_games
 from .model import predict_logistic, calibrate
-from .io import read_json, write_json, now, code_hash, digest
+from .io import read_json, write_json, now, code_hash, forecast_surface_hash, digest
 
 LIVE_URL = "https://api.the-odds-api.com/v4/sports/basketball_nba/odds"
 MARKET = "h2h"
@@ -88,19 +88,24 @@ def forecast(bundle_dir, features, *, allow_code_drift=False):
     bundle = read_json(Path(bundle_dir)/"bundle.json")
     if bundle["features"] != FEATURES:
         raise ValueError("Feature schema differs from the frozen bundle")
-    drift = bundle.get("code_sha256") != code_hash()
+    surface = bundle.get("forecast_surface_sha256")
+    if surface is None:
+        raise ValueError("Bundle predates forecast-surface hashing; freeze a new release")
+    drift = surface != forecast_surface_hash()
     if drift and not allow_code_drift:
-        raise ValueError("Source changed since the bundle was frozen; freeze a new bundle "
-                         "or pass allow_code_drift to record the drift explicitly")
+        raise ValueError("Forecast-path source changed since the bundle was frozen (feature "
+                         "building, model application or IO); freeze a new release or pass "
+                         "allow_code_drift to record the drift explicitly")
     raw = predict_logistic(bundle["logistic"], features[FEATURES].to_numpy(), np.full(len(features), .5))
     return pd.DataFrame({"game_id": features.game_id.to_numpy(),
                          "decision_at": features.decision_at.to_numpy(),
                          "p_model_raw": raw,
                          "p_model": calibrate(raw, bundle["calibrators"]["logistic"]),
                          "p_elo": features.p_elo.to_numpy(),
-                         "bundle_code_sha256": bundle.get("code_sha256"),
-                         "code_sha256_at_issue": code_hash(),
-                         "code_drift": bool(drift)})
+                         "bundle_forecast_surface": surface,
+                         "forecast_surface_at_issue": forecast_surface_hash(),
+                         "package_sha256_at_issue": code_hash(),
+                         "forecast_surface_drift": bool(drift)})
 
 
 def devig(home_price, away_price):
@@ -471,6 +476,7 @@ def release(data, out, *, train_end, tune_end, calibration_end, threads=2, label
                        "calibration": str(calibration_end)},
         "split_counts": {k: len(v) for k, v in parts.items()},
         "created_at": now(), "code_sha256": code_hash(),
+        "forecast_surface_sha256": forecast_surface_hash(),
         "data_sha256": {f: digest(Path(data)/f) for f in ("games.csv", "results.csv")},
         "versions": {"python": platform.python_version(), "numpy": np.__version__,
                      "pandas": pd.__version__, "sklearn": sklearn.__version__,
@@ -487,4 +493,5 @@ def release(data, out, *, train_end, tune_end, calibration_end, threads=2, label
         "which computes no expected value, stake or wager.", ""]))
     return {"release": str(out), "split_counts": {k: len(v) for k, v in parts.items()},
             "refit_games": fitted["refit_games"], "code_sha256": code_hash(),
+            "forecast_surface_sha256": forecast_surface_hash(),
             "note": "Deployment bundle only; no season was scored."}

@@ -7,7 +7,7 @@ from sports_method.collect import (CREDIT_FLOOR, MIN_REFERENCE_BOOKS, build_refe
                                    pending_features, poll, status)
 from sports_method.free_data import FEATURES, build_features, load_games
 from sports_method.free_final import fit_candidate, final_partition
-from sports_method.io import read_json, write_json, code_hash
+from sports_method.io import read_json, write_json, code_hash, forecast_surface_hash
 from test_free import fixture_data
 
 CUTOFF = pd.Timestamp('2026-10-20T23:00:00Z')
@@ -104,7 +104,8 @@ def bundle_for(tmp_path):
     run.mkdir()
     write_json(run/'bundle.json', {'features': FEATURES, 'logistic': fitted['logistic'],
                                    'calibrators': fitted['calibrators'], 'home_rate': fitted['home_rate'],
-                                   'code_sha256': code_hash()})
+                                   'code_sha256': code_hash(),
+                                   'forecast_surface_sha256': forecast_surface_hash()})
     return run
 
 
@@ -218,9 +219,9 @@ def test_forecast_refuses_drifted_bundle(tmp_path):
     good = forecast(bundle, features)
     assert len(good) == 2
     drifted = read_json(bundle/'bundle.json')
-    drifted['code_sha256'] = '0'*64
+    drifted['forecast_surface_sha256'] = '0'*64
     write_json(bundle/'bundle.json', drifted)
-    with pytest.raises(ValueError, match='Source changed'):
+    with pytest.raises(ValueError, match='Forecast-path source changed'):
         forecast(bundle, features)
 
 
@@ -264,14 +265,14 @@ def test_code_drift_is_refused_then_recorded(tmp_path):
     bundle = bundle_for(tmp_path)
     features = pending_features(settled, pending)
     drifted = read_json(bundle/'bundle.json')
-    drifted['code_sha256'] = '0'*64
+    drifted['forecast_surface_sha256'] = '0'*64
     write_json(bundle/'bundle.json', drifted)
-    with pytest.raises(ValueError, match='freeze a new bundle'):
+    with pytest.raises(ValueError, match='freeze a new release'):
         forecast(bundle, features)
     recorded = forecast(bundle, features, allow_code_drift=True)
-    assert recorded.code_drift.all()
-    assert (recorded.bundle_code_sha256 == '0'*64).all()
-    assert (recorded.code_sha256_at_issue == code_hash()).all()
+    assert recorded.forecast_surface_drift.all()
+    assert (recorded.bundle_forecast_surface == '0'*64).all()
+    assert (recorded.forecast_surface_at_issue == forecast_surface_hash()).all()
 
 
 def cup_schedule(tmp_path, assigned=False):
@@ -374,3 +375,19 @@ def test_lateness_is_recorded(tmp_path):
                   execute=True, fetcher=fake_payload(), window_minutes=5)
     assert ledger['seconds_late'] == pytest.approx(240, abs=1)
     assert ledger['planned_at'].startswith('2026-10-20T23:00')
+
+
+def test_unrelated_module_edit_does_not_halt_collection(tmp_path, monkeypatch):
+    """Editing a research module must not stop a season of forecasting."""
+    from sports_method import io as io_module
+    settled, pending = settled_and_pending(tmp_path)
+    bundle = bundle_for(tmp_path)
+    features = pending_features(settled, pending)
+    before = forecast(bundle, features)
+    monkeypatch.setattr(io_module, 'code_hash', lambda: 'a package edit elsewhere')
+    import sports_method.collect as collect_module
+    monkeypatch.setattr(collect_module, 'code_hash', lambda: 'a package edit elsewhere')
+    after = forecast(bundle, features)
+    pd.testing.assert_series_equal(before.p_model, after.p_model)
+    assert not after.forecast_surface_drift.any()
+    assert (after.package_sha256_at_issue == 'a package edit elsewhere').all()

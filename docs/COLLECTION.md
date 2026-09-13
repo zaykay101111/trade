@@ -131,8 +131,13 @@ point: it is what later distinguishes "this price existed at the cutoff" from
 - **Thin coverage abstains.** Fewer than three reference books (excluding the
   execution book) yields no reference and a recorded abstention reason.
 - **The execution book is never in its own reference.**
-- **Code drift halts forecasting** unless `--allow-code-drift` is passed, and the
-  override is recorded on every row it produces, with both hashes.
+- **Forecast-path drift halts forecasting.** A release records two hashes: the
+  whole package, and the forecast surface - `free_data.py`, `model.py`,
+  `collect.py`, `io.py`, the modules that determine a probability from a
+  schedule and a bundle. Only a change to that surface halts collection;
+  editing a research module mid-season does not, though both hashes are stamped
+  on every forecast row either way. `--allow-code-drift` overrides the halt and
+  flags every row it produces.
 - **The quota is watched.** Polls record credits remaining and warn below 25.
 
 ## What this does not do

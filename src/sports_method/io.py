@@ -21,6 +21,21 @@ def code_hash():
         h.update(path.read_bytes())
     return h.hexdigest()
 
+# Modules that determine a forecast given a schedule and a fitted bundle. A
+# change here changes what a deployed forecast means; a change anywhere else in
+# the package does not, and must not halt a season of collection.
+FORECAST_SURFACE = ("free_data.py", "model.py", "collect.py", "io.py")
+
+
+def forecast_surface_hash():
+    h = hashlib.sha256()
+    for name in FORECAST_SURFACE:
+        path = Path(__file__).parent/name
+        h.update(name.encode())
+        h.update(path.read_bytes())
+    return h.hexdigest()
+
+
 def now():
     return datetime.now(timezone.utc).isoformat()
 
