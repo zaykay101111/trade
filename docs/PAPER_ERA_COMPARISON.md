@@ -45,7 +45,22 @@ development (-0.0088). All models beat the constant home rate decisively
 
 ### Their test season, 2017/18 (n=1,230)
 
-Our accuracy 64.96% calibrated, 65.85% raw; Elo 65.28%. Their reported 69.23%.
+| Model | Log loss | Brier | Accuracy | ECE |
+|---|---|---|---|---|
+| home rate | 0.680657 | 0.243781 | 57.89% | 0.0006 |
+| Elo | 0.620445 | 0.215560 | 65.28% | 0.0335 |
+| logistic (calibrated) | 0.621833 | 0.216284 | 64.96% | 0.0335 |
+| logistic (raw) | 0.621066 | 0.215985 | 65.85% | 0.0422 |
+| boosted | 0.627116 | 0.218531 | 65.28% | 0.0540 |
+
+Their reported accuracies on this same season: LR 69.23%, RF 68.28%, SVM 68.28%,
+MLP 68.02%. Our best is 65.85%, a gap of roughly 3.4 points against their
+selected model.
+
+Elo is the best model of ours on this season; logistic minus Elo is +0.001388
+with interval [-0.008039, +0.010367], and boosted is worse still at +0.006671.
+So in this season our engineered features add nothing over a plain rating
+system, which makes the feature gap against the paper more credible, not less.
 
 ## What we learned
 
@@ -116,14 +131,13 @@ sports replicate-external --data data/normalized/nba-paper-era-v2 \
   --calibration-end 2017-07-01 --evaluation-end 2018-07-01
 ```
 
-All figures above are from the canonical local run (`runs/paper-era-v1`,
-Python 3.12, xgboost 3.4.1), except the 2017/18 accuracy comparison, which used a
-Linux sandbox (Python 3.11, xgboost 3.2.0) and reports a logistic figure.
+All figures above are from canonical local runs (`runs/paper-era-v1` and
+`runs/paper-era-2017-18`, Python 3.12, xgboost 3.4.1).
 
-The two environments were compared directly. Home rate and Elo agreed exactly;
-calibrated logistic agreed to 1e-9 (0.6189004551 local vs 0.6189004541 sandbox,
-L-BFGS convergence noise); boosted moved by 3e-4 (0.620616 vs 0.620910) on the
-xgboost version change. Conclusions rest on the logistic and Elo comparison and
+Both were also run in a Linux sandbox (Python 3.11, xgboost 3.2.0) and compared. Home rate and Elo agreed exactly;
+calibrated logistic agreed to 1e-9 on 2018/19 (0.6189004551 local vs 0.6189004541
+sandbox) and to 3e-10 on 2017/18, both L-BFGS convergence noise; boosted moved by
+3e-4 and 2e-4 respectively on the xgboost version change. Conclusions rest on the logistic and Elo comparison and
 are unaffected.
 
 ## Data note
