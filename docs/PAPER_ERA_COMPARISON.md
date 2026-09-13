@@ -35,7 +35,7 @@ accuracy comparison.
 | Elo | 0.620843 | 0.215670 | 65.69% | 0.0391 |
 | logistic (calibrated) | 0.618900 | 0.214425 | 65.20% | 0.0523 |
 | logistic (raw) | 0.614883 | 0.212967 | 66.18% | 0.0470 |
-| boosted | 0.620910 | 0.215404 | 64.96% | 0.0461 |
+| boosted | 0.620616 | 0.215332 | 64.72% | 0.0481 |
 
 Logistic minus Elo: -0.001943, 95% weekly-block interval [-0.009094, +0.005335].
 **Includes zero: no confirmed advantage over Elo in this era**, unlike the
@@ -97,6 +97,13 @@ vs 0.606802). Fitting a sigmoid on a half-season slice appears to add more noise
 than it removes. Worth investigating in development; it does not change any
 frozen result.
 
+
+**7. Boosted trees are indistinguishable from Elo in this era.** Boosted minus Elo
+is -0.000228 with interval [-0.008546, +0.007300] - effectively zero, consistent
+with the 2025-26 holdout where the same comparison also spanned zero. Across two
+untouched eras, the gradient-boosted challenger has never separated from a fixed
+Elo rating. That is a reason to keep it strictly secondary.
+
 ## Reproducing
 
 ```bash
@@ -109,10 +116,15 @@ sports replicate-external --data data/normalized/nba-paper-era-v2 \
   --calibration-end 2017-07-01 --evaluation-end 2018-07-01
 ```
 
-The numbers above were produced in a Linux sandbox on Python 3.11 with
-xgboost 3.2.0, not the pinned local environment (Python 3.12, xgboost 3.4.1).
-Logistic, Elo and home-rate figures are insensitive to that; boosted figures may
-shift slightly. Re-run locally for canonical artifacts.
+All figures above are from the canonical local run (`runs/paper-era-v1`,
+Python 3.12, xgboost 3.4.1), except the 2017/18 accuracy comparison, which used a
+Linux sandbox (Python 3.11, xgboost 3.2.0) and reports a logistic figure.
+
+The two environments were compared directly. Home rate and Elo agreed exactly;
+calibrated logistic agreed to 1e-9 (0.6189004551 local vs 0.6189004541 sandbox,
+L-BFGS convergence noise); boosted moved by 3e-4 (0.620616 vs 0.620910) on the
+xgboost version change. Conclusions rest on the logistic and Elo comparison and
+are unaffected.
 
 ## Data note
 

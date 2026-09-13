@@ -1,0 +1,733 @@
+{
+  "created_at": "2026-09-13T06:08:32.883229+00:00",
+  "mode": "odds_free_external",
+  "warning": "Research only: no odds, ROI, stakes, or evidence of beating bookmakers. Schedule observation times are reconstructed; result availability assumes +24h after scheduled start. Historical revisions are not verified. Validation is development data; repeated optimization can overfit it.",
+  "protocol": "Frozen candidate recipe applied to Walsh & Joshi era 2014-15..2018-19. Same eleven features, lambda 0.01, sigmoid calibration, fixed Elo, constant home rate and secondary boosted trees as the 2020-2026 work. Elo starts at 1500 with no prior history, so the first season of any era is a burn-in period. These seasons were never used to design the recipe, but this is a retrospective comparison across a different era, not a prospective test; era differences in pace, scoring and home advantage are real.",
+  "label": "Walsh & Joshi era 2014-15..2018-19",
+  "candidate": {
+    "primary": "logistic regression, all eleven features, lambda=0.01, sigmoid calibration",
+    "features": [
+      "margin_diff",
+      "scored_diff",
+      "allowed_diff",
+      "win_rate_diff",
+      "history_count_diff",
+      "home_rest",
+      "away_rest",
+      "home_b2b",
+      "away_b2b",
+      "elo_diff",
+      "neutral"
+    ],
+    "l2": 0.01,
+    "offset_q": 0.5,
+    "intercept_penalized": false,
+    "standardization": "mean/scale fitted on refit rows only",
+    "calibration": "single sigmoid (intercept + exp slope, L2 0.001) fitted on calibration period only",
+    "elo": {
+      "initial": 1500,
+      "k": 20,
+      "scale": 400,
+      "home_advantage": 65,
+      "season_reset": false
+    },
+    "rolling_window_settled_games": 20,
+    "rest_cap_days": 14,
+    "back_to_back_threshold_days": 1.5,
+    "cold_start": {
+      "scoring_averages": 0,
+      "win_rate": 0.5
+    },
+    "comparators": {
+      "home_rate": "constant home-win rate of the refit rows",
+      "elo": "fixed Elo probability, uncalibrated",
+      "boosted": "secondary; four predeclared candidates selected on the tune period"
+    },
+    "boosted_grid": [
+      {
+        "max_depth": 2,
+        "n_estimators": 100
+      },
+      {
+        "max_depth": 2,
+        "n_estimators": 250
+      },
+      {
+        "max_depth": 3,
+        "n_estimators": 100
+      },
+      {
+        "max_depth": 3,
+        "n_estimators": 250
+      }
+    ]
+  },
+  "era": {
+    "start": "2014-07-01",
+    "train": "2017-07-01",
+    "tune": "2018-01-01",
+    "calibration": "2018-07-01",
+    "evaluation": "2019-07-01"
+  },
+  "data_span": [
+    "2014-10-28 23:00:00+00:00",
+    "2019-04-11 01:30:00+00:00"
+  ],
+  "split_counts": {
+    "train": 3690,
+    "tune": 529,
+    "calibration": 687,
+    "evaluation": 1230
+  },
+  "metrics": {
+    "home_rate": {
+      "log_loss": 0.6760865311304377,
+      "brier": 0.2415163245883845,
+      "accuracy": 0.5926829268292683
+    },
+    "elo": {
+      "log_loss": 0.6208433975724291,
+      "brier": 0.21566999906339443,
+      "accuracy": 0.656910569105691
+    },
+    "logistic": {
+      "log_loss": 0.6189004550607594,
+      "brier": 0.21442474812845164,
+      "accuracy": 0.6520325203252032
+    },
+    "boosted": {
+      "log_loss": 0.6206155460789039,
+      "brier": 0.21533152300264904,
+      "accuracy": 0.6471544715447154
+    },
+    "logistic_raw": {
+      "log_loss": 0.6148831348833652,
+      "brier": 0.21296741210264947,
+      "accuracy": 0.6617886178861788
+    },
+    "boosted_raw": {
+      "log_loss": 0.6172140836715698,
+      "brier": 0.2140599638223648,
+      "accuracy": 0.651219512195122
+    }
+  },
+  "calibration_error": {
+    "home_rate": {
+      "ece": 0.01031743737679125,
+      "classwise_ece": 0.010317437376791277,
+      "bins": 20
+    },
+    "elo": {
+      "ece": 0.03907984381688863,
+      "classwise_ece": 0.039079843816888615,
+      "bins": 20
+    },
+    "logistic": {
+      "ece": 0.05228723619694436,
+      "classwise_ece": 0.05228723619694438,
+      "bins": 20
+    },
+    "boosted": {
+      "ece": 0.04814711489873282,
+      "classwise_ece": 0.048147114898732815,
+      "bins": 20
+    },
+    "logistic_raw": {
+      "ece": 0.0470193069804418,
+      "classwise_ece": 0.047019306980441794,
+      "bins": 20
+    },
+    "boosted_raw": {
+      "ece": 0.04020272368580344,
+      "classwise_ece": 0.04020272368580345,
+      "bins": 20
+    }
+  },
+  "vs_elo": {
+    "logistic": {
+      "difference": -0.001942942511669814,
+      "ci95": [
+        -0.009093579025810277,
+        0.005335091457403116
+      ],
+      "method": "paired 7-day blocks; negative favors model; excludes training/selection uncertainty"
+    },
+    "boosted": {
+      "difference": -0.00022785149352534187,
+      "ci95": [
+        -0.008546417241587476,
+        0.007300285878612842
+      ],
+      "method": "paired 7-day blocks; negative favors model; excludes training/selection uncertainty"
+    }
+  },
+  "vs_home_rate": {
+    "elo": {
+      "difference": -0.055243133558008604,
+      "ci95": [
+        -0.08269555885750506,
+        -0.027059852200179334
+      ],
+      "method": "paired 7-day blocks; negative favors model; excludes training/selection uncertainty"
+    },
+    "logistic": {
+      "difference": -0.05718607606967841,
+      "ci95": [
+        -0.08580407578082395,
+        -0.028517561165337466
+      ],
+      "method": "paired 7-day blocks; negative favors model; excludes training/selection uncertainty"
+    },
+    "boosted": {
+      "difference": -0.05547098505153394,
+      "ci95": [
+        -0.08428123166125455,
+        -0.027035465792940864
+      ],
+      "method": "paired 7-day blocks; negative favors model; excludes training/selection uncertainty"
+    }
+  },
+  "selected_params": {
+    "max_depth": 2,
+    "n_estimators": 100,
+    "learning_rate": 0.03,
+    "reg_lambda": 10,
+    "min_child_weight": 20,
+    "tree_method": "hist",
+    "objective": "binary:logistic",
+    "eval_metric": "logloss",
+    "n_jobs": 2,
+    "random_state": 42,
+    "base_score": 0.5
+  },
+  "refit_games": 4219,
+  "code_sha256": "c396cdd49de5cc97d4c1a6726e04eb6b596dddbce3fea44b473e0f12a967ad1f",
+  "data_sha256": {
+    "games.csv": "db59492c4b36cff0c2310fa1efc27c0dcc5eb759db7b0fa9067fb79f7f7dff54",
+    "results.csv": "3b673dc7896b6cf7101433bc696a68f572626422db1b7f89a2997e437f9dfe8b"
+  },
+  "versions": {
+    "python": "3.12.14",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "sklearn": "1.9.1",
+    "xgboost": "3.4.1"
+  },
+  "calibration_bins": {
+    "home_rate": [
+      {
+        "lower": 0.5,
+        "n": 1230,
+        "predicted": 0.582365489452477,
+        "observed": 0.5926829268292683
+      }
+    ],
+    "elo": [
+      {
+        "lower": 0.1,
+        "n": 28,
+        "predicted": 0.1652406253792242,
+        "observed": 0.21428571428571427
+      },
+      {
+        "lower": 0.2,
+        "n": 101,
+        "predicted": 0.25253974539693064,
+        "observed": 0.32673267326732675
+      },
+      {
+        "lower": 0.30000000000000004,
+        "n": 132,
+        "predicted": 0.3545226149711026,
+        "observed": 0.4090909090909091
+      },
+      {
+        "lower": 0.4,
+        "n": 180,
+        "predicted": 0.4502605342374099,
+        "observed": 0.4888888888888889
+      },
+      {
+        "lower": 0.5,
+        "n": 199,
+        "predicted": 0.5537158251181704,
+        "observed": 0.5477386934673367
+      },
+      {
+        "lower": 0.6000000000000001,
+        "n": 202,
+        "predicted": 0.6510053456759078,
+        "observed": 0.693069306930693
+      },
+      {
+        "lower": 0.7000000000000001,
+        "n": 209,
+        "predicted": 0.7481001230574293,
+        "observed": 0.7129186602870813
+      },
+      {
+        "lower": 0.8,
+        "n": 160,
+        "predicted": 0.8474169406331551,
+        "observed": 0.83125
+      },
+      {
+        "lower": 0.9,
+        "n": 19,
+        "predicted": 0.915301885598162,
+        "observed": 0.8947368421052632
+      }
+    ],
+    "logistic": [
+      {
+        "lower": 0.0,
+        "n": 3,
+        "predicted": 0.08484431309891903,
+        "observed": 0.3333333333333333
+      },
+      {
+        "lower": 0.1,
+        "n": 42,
+        "predicted": 0.16648771575893678,
+        "observed": 0.16666666666666666
+      },
+      {
+        "lower": 0.2,
+        "n": 101,
+        "predicted": 0.2529221802955426,
+        "observed": 0.3564356435643564
+      },
+      {
+        "lower": 0.30000000000000004,
+        "n": 140,
+        "predicted": 0.35026960669455826,
+        "observed": 0.35714285714285715
+      },
+      {
+        "lower": 0.4,
+        "n": 169,
+        "predicted": 0.4538177869043425,
+        "observed": 0.5739644970414202
+      },
+      {
+        "lower": 0.5,
+        "n": 190,
+        "predicted": 0.5522410685321115,
+        "observed": 0.531578947368421
+      },
+      {
+        "lower": 0.6000000000000001,
+        "n": 194,
+        "predicted": 0.6480452294154346,
+        "observed": 0.6855670103092784
+      },
+      {
+        "lower": 0.7000000000000001,
+        "n": 192,
+        "predicted": 0.7482374088634426,
+        "observed": 0.7552083333333334
+      },
+      {
+        "lower": 0.8,
+        "n": 166,
+        "predicted": 0.8479051714127946,
+        "observed": 0.7831325301204819
+      },
+      {
+        "lower": 0.9,
+        "n": 33,
+        "predicted": 0.9168059993086453,
+        "observed": 0.8787878787878788
+      }
+    ],
+    "boosted": [
+      {
+        "lower": 0.1,
+        "n": 19,
+        "predicted": 0.18638229506201556,
+        "observed": 0.15789473684210525
+      },
+      {
+        "lower": 0.2,
+        "n": 120,
+        "predicted": 0.2473969404672305,
+        "observed": 0.31666666666666665
+      },
+      {
+        "lower": 0.30000000000000004,
+        "n": 153,
+        "predicted": 0.34791399872411033,
+        "observed": 0.4117647058823529
+      },
+      {
+        "lower": 0.4,
+        "n": 215,
+        "predicted": 0.4602330808017553,
+        "observed": 0.5395348837209303
+      },
+      {
+        "lower": 0.5,
+        "n": 95,
+        "predicted": 0.5385172932236715,
+        "observed": 0.4842105263157895
+      },
+      {
+        "lower": 0.6000000000000001,
+        "n": 227,
+        "predicted": 0.6575755720961863,
+        "observed": 0.6696035242290749
+      },
+      {
+        "lower": 0.7000000000000001,
+        "n": 189,
+        "predicted": 0.7361644782559337,
+        "observed": 0.7407407407407407
+      },
+      {
+        "lower": 0.8,
+        "n": 179,
+        "predicted": 0.8446148347408586,
+        "observed": 0.7932960893854749
+      },
+      {
+        "lower": 0.9,
+        "n": 33,
+        "predicted": 0.9087988437703789,
+        "observed": 0.8787878787878788
+      }
+    ],
+    "logistic_raw": [
+      {
+        "lower": 0.1,
+        "n": 7,
+        "predicted": 0.16098559367664797,
+        "observed": 0.14285714285714285
+      },
+      {
+        "lower": 0.2,
+        "n": 80,
+        "predicted": 0.2574414369326976,
+        "observed": 0.3
+      },
+      {
+        "lower": 0.30000000000000004,
+        "n": 141,
+        "predicted": 0.3561860290010715,
+        "observed": 0.3546099290780142
+      },
+      {
+        "lower": 0.4,
+        "n": 177,
+        "predicted": 0.4524676184423573,
+        "observed": 0.480225988700565
+      },
+      {
+        "lower": 0.5,
+        "n": 245,
+        "predicted": 0.5505797820901885,
+        "observed": 0.5551020408163265
+      },
+      {
+        "lower": 0.6000000000000001,
+        "n": 236,
+        "predicted": 0.6494002336993767,
+        "observed": 0.6779661016949152
+      },
+      {
+        "lower": 0.7000000000000001,
+        "n": 202,
+        "predicted": 0.7473062408099422,
+        "observed": 0.7623762376237624
+      },
+      {
+        "lower": 0.8,
+        "n": 138,
+        "predicted": 0.8388009913326232,
+        "observed": 0.8478260869565217
+      },
+      {
+        "lower": 0.9,
+        "n": 4,
+        "predicted": 0.9125205119986374,
+        "observed": 0.5
+      }
+    ],
+    "boosted_raw": [
+      {
+        "lower": 0.2,
+        "n": 75,
+        "predicted": 0.27418237924575806,
+        "observed": 0.30666666666666664
+      },
+      {
+        "lower": 0.30000000000000004,
+        "n": 163,
+        "predicted": 0.35464635491371155,
+        "observed": 0.34355828220858897
+      },
+      {
+        "lower": 0.4,
+        "n": 258,
+        "predicted": 0.466474324464798,
+        "observed": 0.5155038759689923
+      },
+      {
+        "lower": 0.5,
+        "n": 106,
+        "predicted": 0.53983473777771,
+        "observed": 0.5094339622641509
+      },
+      {
+        "lower": 0.6000000000000001,
+        "n": 329,
+        "predicted": 0.6540967226028442,
+        "observed": 0.6899696048632219
+      },
+      {
+        "lower": 0.7000000000000001,
+        "n": 183,
+        "predicted": 0.7498764991760254,
+        "observed": 0.7431693989071039
+      },
+      {
+        "lower": 0.8,
+        "n": 116,
+        "predicted": 0.8401191234588623,
+        "observed": 0.8620689655172413
+      }
+    ]
+  },
+  "monthly": {
+    "2018-10": {
+      "n": 107,
+      "home_rate": {
+        "log_loss": 0.6649529521358902,
+        "brier": 0.23600025875726127,
+        "accuracy": 0.6261682242990654
+      },
+      "elo": {
+        "log_loss": 0.6229245803252811,
+        "brier": 0.21606433092036317,
+        "accuracy": 0.6542056074766355
+      },
+      "logistic": {
+        "log_loss": 0.6317551321568171,
+        "brier": 0.21848740358134364,
+        "accuracy": 0.6355140186915887
+      },
+      "boosted": {
+        "log_loss": 0.6421384048951883,
+        "brier": 0.22396720164086156,
+        "accuracy": 0.6074766355140186
+      },
+      "logistic_raw": {
+        "log_loss": 0.6234542659855711,
+        "brier": 0.21561535573154592,
+        "accuracy": 0.6542056074766355
+      },
+      "boosted_raw": {
+        "log_loss": 0.6325048804283142,
+        "brier": 0.22050318121910095,
+        "accuracy": 0.6261682242990654
+      }
+    },
+    "2018-11": {
+      "n": 216,
+      "home_rate": {
+        "log_loss": 0.6745772536965841,
+        "brier": 0.24076856201476446,
+        "accuracy": 0.5972222222222222
+      },
+      "elo": {
+        "log_loss": 0.6637442517592794,
+        "brier": 0.2345954327106652,
+        "accuracy": 0.6111111111111112
+      },
+      "logistic": {
+        "log_loss": 0.6566768663973553,
+        "brier": 0.2317494450370867,
+        "accuracy": 0.5972222222222222
+      },
+      "boosted": {
+        "log_loss": 0.6633135719497448,
+        "brier": 0.23467151909160164,
+        "accuracy": 0.5972222222222222
+      },
+      "logistic_raw": {
+        "log_loss": 0.6453724272931419,
+        "brier": 0.2272067339010058,
+        "accuracy": 0.6111111111111112
+      },
+      "boosted_raw": {
+        "log_loss": 0.6505028605461121,
+        "brier": 0.229612797498703,
+        "accuracy": 0.6018518518518519
+      }
+    },
+    "2018-12": {
+      "n": 222,
+      "home_rate": {
+        "log_loss": 0.6679623689370767,
+        "brier": 0.23749125650351724,
+        "accuracy": 0.6171171171171171
+      },
+      "elo": {
+        "log_loss": 0.6436422155110632,
+        "brier": 0.22573377022282662,
+        "accuracy": 0.6351351351351351
+      },
+      "logistic": {
+        "log_loss": 0.6396398361124284,
+        "brier": 0.2233661438034686,
+        "accuracy": 0.6306306306306306
+      },
+      "boosted": {
+        "log_loss": 0.6375225725233755,
+        "brier": 0.22268871250260663,
+        "accuracy": 0.6081081081081081
+      },
+      "logistic_raw": {
+        "log_loss": 0.6319510411965173,
+        "brier": 0.22051360019291488,
+        "accuracy": 0.6396396396396397
+      },
+      "boosted_raw": {
+        "log_loss": 0.6315346360206604,
+        "brier": 0.2204667627811432,
+        "accuracy": 0.6171171171171171
+      }
+    },
+    "2019-01": {
+      "n": 220,
+      "home_rate": {
+        "log_loss": 0.6796989672136368,
+        "brier": 0.24330608466961348,
+        "accuracy": 0.5818181818181818
+      },
+      "elo": {
+        "log_loss": 0.5570141822419312,
+        "brier": 0.1876546900081743,
+        "accuracy": 0.7272727272727273
+      },
+      "logistic": {
+        "log_loss": 0.5550246069004259,
+        "brier": 0.18648664864276854,
+        "accuracy": 0.7363636363636363
+      },
+      "boosted": {
+        "log_loss": 0.5486010810931292,
+        "brier": 0.1833964093780174,
+        "accuracy": 0.7454545454545455
+      },
+      "logistic_raw": {
+        "log_loss": 0.5621991981813494,
+        "brier": 0.18938021395087876,
+        "accuracy": 0.7318181818181818
+      },
+      "boosted_raw": {
+        "log_loss": 0.5586483478546143,
+        "brier": 0.18733333051204681,
+        "accuracy": 0.75
+      }
+    },
+    "2019-02": {
+      "n": 159,
+      "home_rate": {
+        "log_loss": 0.6849458324064851,
+        "brier": 0.24590561298166425,
+        "accuracy": 0.5660377358490566
+      },
+      "elo": {
+        "log_loss": 0.6256322611284887,
+        "brier": 0.21807621158231494,
+        "accuracy": 0.6415094339622641
+      },
+      "logistic": {
+        "log_loss": 0.6183286835479067,
+        "brier": 0.21440229326137095,
+        "accuracy": 0.6729559748427673
+      },
+      "boosted": {
+        "log_loss": 0.6280251252408202,
+        "brier": 0.2184881711640061,
+        "accuracy": 0.6729559748427673
+      },
+      "logistic_raw": {
+        "log_loss": 0.6153826152060218,
+        "brier": 0.21333656833807624,
+        "accuracy": 0.6666666666666666
+      },
+      "boosted_raw": {
+        "log_loss": 0.624616265296936,
+        "brier": 0.21727114915847778,
+        "accuracy": 0.6666666666666666
+      }
+    },
+    "2019-03": {
+      "n": 226,
+      "home_rate": {
+        "log_loss": 0.676007588604509,
+        "brier": 0.24147721298104685,
+        "accuracy": 0.5929203539823009
+      },
+      "elo": {
+        "log_loss": 0.621822458586138,
+        "brier": 0.21517293282568445,
+        "accuracy": 0.672566371681416
+      },
+      "logistic": {
+        "log_loss": 0.6164615439273248,
+        "brier": 0.21245246658292516,
+        "accuracy": 0.6415929203539823
+      },
+      "boosted": {
+        "log_loss": 0.6179868132950112,
+        "brier": 0.213646185022076,
+        "accuracy": 0.6371681415929203
+      },
+      "logistic_raw": {
+        "log_loss": 0.6129503131950542,
+        "brier": 0.21147272050445837,
+        "accuracy": 0.668141592920354
+      },
+      "boosted_raw": {
+        "log_loss": 0.6151799559593201,
+        "brier": 0.21278175711631775,
+        "accuracy": 0.6371681415929203
+      }
+    },
+    "2019-04": {
+      "n": 80,
+      "home_rate": {
+        "log_loss": 0.690278244314434,
+        "brier": 0.24854752490749837,
+        "accuracy": 0.55
+      },
+      "elo": {
+        "log_loss": 0.6022074180337584,
+        "brier": 0.20978090903167512,
+        "accuracy": 0.6375
+      },
+      "logistic": {
+        "log_loss": 0.6258441336922564,
+        "brier": 0.21984798980878523,
+        "accuracy": 0.6375
+      },
+      "boosted": {
+        "log_loss": 0.6203664644185123,
+        "brier": 0.21745591656364405,
+        "accuracy": 0.65
+      },
+      "logistic_raw": {
+        "log_loss": 0.6230830475675113,
+        "brier": 0.21839254735730088,
+        "accuracy": 0.65
+      },
+      "boosted_raw": {
+        "log_loss": 0.6192342042922974,
+        "brier": 0.21639803051948547,
+        "accuracy": 0.65
+      }
+    }
+  }
+}
