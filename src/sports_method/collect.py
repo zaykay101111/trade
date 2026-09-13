@@ -31,6 +31,20 @@ MIN_REFERENCE_BOOKS = 3
 FAR_FUTURE = pd.Timestamp("2200-01-01", tz="UTC")
 # Free tier is 500 credits per month; stop well before exhaustion.
 CREDIT_FLOOR = 25
+# NBA Cup knockout rows ship with team id 0 and no arena until the bracket is set.
+PLACEHOLDER_TEAM = "0"
+
+
+def _parse_times(frame, columns):
+    """Parse timestamp columns tolerantly.
+
+    A schedule may be rewritten by different tools, mixing "...T01:00:00+00:00"
+    and "... 01:00:00+00:00" in one file; a single strict format would fail.
+    """
+    for column in columns:
+        if column in frame:
+            frame[column] = pd.to_datetime(frame[column], utc=True, format="mixed")
+    return frame
 
 
 def _ts(value):
@@ -194,29 +208,112 @@ def _append(path, rows):
     frame.to_csv(path, mode="a", header=not Path(path).exists(), index=False)
 
 
+def split_schedule(games):
+    """Separate fully specified games from rows awaiting team assignment.
+
+    NBA Cup knockout games are published with team id 0 and no arena until the
+    bracket is decided, and roughly thirty further games are unscheduled at
+    release. Forecasting either would corrupt ratings, so they are held aside
+    and added by `refresh` once the NBA assigns them.
+    """
+    ids = games[["home_id", "away_id"]].astype(str)
+    unassigned = (ids.home_id == PLACEHOLDER_TEAM) | (ids.away_id == PLACEHOLDER_TEAM)
+    for column in ("home_name", "away_name"):
+        if column in games:
+            unassigned |= games[column].astype(str).str.strip().isin(("", "None", "nan", "TBD"))
+    same = ids.home_id == ids.away_id
+    if (same & ~unassigned).any():
+        raise ValueError("Schedule contains a game with identical team IDs")
+    return games[~unassigned].copy(), games[unassigned].copy()
+
+
+def _poll_times(games):
+    return [pd.Timestamp(t).isoformat() for t in sorted(games.decision_at.unique())]
+
+
 def initialise(schedule_csv, out, season):
     """Create a collection directory from a season schedule. No network access."""
     out = Path(out)
     if out.exists():
         raise FileExistsError(f"Collection exists: {out}; choose a new directory")
-    games = pd.read_csv(schedule_csv, dtype={"game_id": str})
-    for column in ("scheduled_at", "decision_at"):
-        games[column] = pd.to_datetime(games[column], utc=True)
+    games = _parse_times(pd.read_csv(schedule_csv, dtype={"game_id": str, "home_id": str, "away_id": str}),
+                         ("scheduled_at", "decision_at", "schedule_observed_at"))
     if games.game_id.duplicated().any():
         raise ValueError("Duplicate game IDs in schedule")
+    usable, pending = split_schedule(games)
+    if usable.empty:
+        raise ValueError("No fully specified games in schedule")
     (out/"raw").mkdir(parents=True)
-    games.to_csv(out/"schedule.csv", index=False)
-    times = sorted(games.decision_at.unique())
+    usable.to_csv(out/"schedule.csv", index=False)
+    if not pending.empty:
+        pending.to_csv(out/"pending_assignment.csv", index=False)
+    times = _poll_times(usable)
     write_json(out/"collection.json", {
         "created_at": now(), "season": season, "mode": "prospective_collection",
-        "games": len(games), "poll_times": [pd.Timestamp(t).isoformat() for t in times],
-        "planned_polls": len(times), "market": MARKET,
+        "revision": 1, "games": len(usable), "awaiting_assignment": len(pending),
+        "poll_times": times, "planned_polls": len(times), "market": MARKET,
         "estimated_credits_per_region": len(times),
         "schedule_sha256": digest(schedule_csv), "code_sha256": code_hash(),
         "warning": "Collection only: no expected value, stake, admission decision or "
                    "wager is computed or recorded by this workflow."})
-    return {"collection": str(out), "games": len(games), "planned_polls": len(times),
-            "estimated_credits_per_region": len(times)}
+    return {"collection": str(out), "games": len(usable),
+            "awaiting_assignment": len(pending), "planned_polls": len(times),
+            "estimated_credits_per_region": len(times),
+            "note": "Rows awaiting team assignment are held in pending_assignment.csv; "
+                    "run collect-refresh once the NBA assigns them."}
+
+
+def refresh(collection, schedule_csv):
+    """Fold an updated schedule into a collection without disturbing records.
+
+    Adds newly assigned games, records start-time revisions, and never edits an
+    executed poll. Already-recorded forecasts, quotes and ledger rows are
+    immutable; only the forward plan changes.
+    """
+    collection = Path(collection)
+    meta = read_json(collection/"collection.json")
+    columns = ("scheduled_at", "decision_at", "schedule_observed_at")
+    current = _parse_times(pd.read_csv(collection/"schedule.csv",
+                                       dtype={"game_id": str, "home_id": str, "away_id": str}), columns)
+    incoming = _parse_times(pd.read_csv(schedule_csv,
+                                        dtype={"game_id": str, "home_id": str, "away_id": str}), columns)
+    usable, pending = split_schedule(incoming)
+    known = set(current.game_id)
+    added = usable[~usable.game_id.isin(known)]
+    revisions = []
+    existing = current.set_index("game_id")
+    for game in usable[usable.game_id.isin(known)].itertuples():
+        before = existing.loc[game.game_id]
+        if before.scheduled_at != game.scheduled_at:
+            revisions.append({"game_id": game.game_id, "field": "scheduled_at",
+                              "before": before.scheduled_at.isoformat(),
+                              "after": game.scheduled_at.isoformat(), "observed_at": now()})
+    withdrawn = current[~current.game_id.isin(set(usable.game_id))]
+    merged = pd.concat([current[current.game_id.isin(set(usable.game_id))].drop(columns=[]),
+                        added], ignore_index=True)
+    merged = merged.drop(columns=["scheduled_at", "decision_at"]).merge(
+        usable[["game_id", "scheduled_at", "decision_at"]], on="game_id", validate="one_to_one")
+    merged = merged.sort_values(["decision_at", "game_id"]).reset_index(drop=True)
+    merged.to_csv(collection/"schedule.csv", index=False)
+    if not pending.empty:
+        pending.to_csv(collection/"pending_assignment.csv", index=False)
+    elif (collection/"pending_assignment.csv").exists():
+        (collection/"pending_assignment.csv").unlink()
+    _append(collection/"schedule_revisions.csv", revisions)
+    for row in withdrawn.itertuples():
+        _append(collection/"schedule_revisions.csv", [{"game_id": row.game_id, "field": "withdrawn",
+            "before": row.scheduled_at.isoformat(), "after": "", "observed_at": now()}])
+    times = _poll_times(merged)
+    meta.update({"revision": meta.get("revision", 1)+1, "games": len(merged),
+                 "awaiting_assignment": len(pending), "poll_times": times,
+                 "planned_polls": len(times), "estimated_credits_per_region": len(times),
+                 "schedule_sha256": digest(schedule_csv), "refreshed_at": now()})
+    write_json(collection/"collection.json", meta)
+    return {"collection": str(collection), "revision": meta["revision"], "games": len(merged),
+            "added": len(added), "start_time_revisions": len(revisions),
+            "withdrawn": len(withdrawn), "awaiting_assignment": len(pending),
+            "planned_polls": len(times),
+            "note": "Executed polls, forecasts and quotes are untouched."}
 
 
 def due_polls(collection, at, window_minutes=5):
@@ -234,10 +331,9 @@ def poll(collection, bundle_dir, data, *, at=None, regions=DEFAULT_REGIONS,
     collection = Path(collection)
     meta = read_json(collection/"collection.json")
     at = _ts(now() if at is None else at)
-    schedule = pd.read_csv(collection/"schedule.csv", dtype={"game_id": str})
-    for column in ("scheduled_at", "decision_at", "schedule_observed_at"):
-        if column in schedule:
-            schedule[column] = pd.to_datetime(schedule[column], utc=True)
+    schedule = _parse_times(pd.read_csv(collection/"schedule.csv",
+                                        dtype={"game_id": str, "home_id": str, "away_id": str}),
+                            ("scheduled_at", "decision_at", "schedule_observed_at"))
     targets = schedule[(schedule.decision_at-at).abs() <= pd.Timedelta(minutes=window_minutes)].copy()
     poll_id = at.isoformat().replace(":", "").replace("+", "_")
     if targets.empty:

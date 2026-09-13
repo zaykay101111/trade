@@ -15,6 +15,8 @@ def main():
     p=sub.add_parser("collect-init", help="Create a prospective T-60 collection directory from a season schedule")
     p.add_argument("--schedule", required=True);p.add_argument("--out", required=True)
     p.add_argument("--season", required=True)
+    p=sub.add_parser("collect-refresh", help="Fold an updated schedule into a collection; records stay immutable")
+    p.add_argument("--collection", required=True);p.add_argument("--schedule", required=True)
     p=sub.add_parser("collect-poll", help="One collection cycle: forecast pending games and record live quotes")
     p.add_argument("--collection", required=True);p.add_argument("--bundle", required=True)
     p.add_argument("--data", required=True);p.add_argument("--at")
@@ -78,6 +80,9 @@ def dispatch(a):
     if a.command=="collect-init":
         from .collect import initialise
         return initialise(a.schedule, a.out, a.season)
+    if a.command=="collect-refresh":
+        from .collect import refresh
+        return refresh(a.collection, a.schedule)
     if a.command=="collect-poll":
         from .collect import poll
         return poll(a.collection, a.bundle, a.data, at=a.at, regions=a.regions,

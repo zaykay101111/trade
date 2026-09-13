@@ -1,0 +1,9 @@
+{
+  "source": "nba_api ScheduleLeagueV2",
+  "seasons": [
+    "2026-27"
+  ],
+  "rows": 1206,
+  "observed_lag_hours": 48,
+  "warning": "schedule_observed_at is reconstructed, not a provider revision timestamp"
+}

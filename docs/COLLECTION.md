@@ -30,6 +30,33 @@ sports collect-poll --collection collection/2026-27 --bundle runs/release-2026-2
   --data data/normalized/nba-v3 --at 2026-10-21T23:00:00Z
 ```
 
+## Games the NBA has not assigned yet
+
+The 2026-27 schedule was published with 1,206 regular-season rows, not 1,230.
+Every team has exactly 80 of its 82 games assigned; the remainder depend on the
+Emirates NBA Cup. Six of those rows are Cup knockout games published with
+**team id 0 and no arena** (2026-12-04, 12-05 and 12-08), and roughly thirty
+further games are not in the file at all until the bracket resolves.
+
+`collect-init` holds any row without both teams in `pending_assignment.csv` and
+plans no polls for it, because forecasting a game with no teams would corrupt
+ratings. Once the NBA assigns them:
+
+```bash
+python scripts/download_schedule.py --seasons 2026-27 --out data/normalized/nba-2026-27-r2
+sports collect-refresh --collection collection/2026-27 --schedule data/normalized/nba-2026-27-r2/games.csv
+```
+
+`collect-refresh` adds newly assigned games, records start-time changes and
+withdrawals in `schedule_revisions.csv`, and bumps the collection revision. It
+never edits an executed poll: recorded forecasts, quotes and ledger rows are
+immutable, and a test asserts their bytes are unchanged across a refresh.
+
+Note for December: game IDs ending 1229 and 1230 follow the pattern of the 2023
+Las Vegas Cup semifinals, which `venues.py` had to correct by hand because the
+provider's neutral flag was wrong. Review those rows when they are assigned
+rather than trusting `is_neutral`.
+
 `freeze-release` fits the same frozen recipe in the same fold shape used
 everywhere else - train through 2025-07-01, tune through 2026-01-01, refit on
 train+tune, calibrate on the first half of 2026 - and scores nothing. It is a

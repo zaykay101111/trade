@@ -262,3 +262,77 @@ def test_code_drift_is_refused_then_recorded(tmp_path):
     assert recorded.code_drift.all()
     assert (recorded.bundle_code_sha256 == '0'*64).all()
     assert (recorded.code_sha256_at_issue == code_hash()).all()
+
+
+def cup_schedule(tmp_path, assigned=False):
+    """Two real games plus an NBA Cup row published with team id 0."""
+    rows = [
+        dict(game_id='0022600001', home_id='A', away_id='B', home_name='Alphas', away_name='Betas',
+             scheduled_at=CUTOFF+pd.Timedelta(hours=1), decision_at=CUTOFF,
+             schedule_observed_at=CUTOFF-pd.Timedelta(days=2), is_neutral=False),
+        dict(game_id='0022600002', home_id='B', away_id='A', home_name='Betas', away_name='Alphas',
+             scheduled_at=CUTOFF+pd.Timedelta(days=1), decision_at=CUTOFF+pd.Timedelta(days=1)-pd.Timedelta(hours=1),
+             schedule_observed_at=CUTOFF, is_neutral=False),
+        dict(game_id='0022601229',
+             home_id='A' if assigned else '0', away_id='B' if assigned else '0',
+             home_name='Alphas' if assigned else None, away_name='Betas' if assigned else None,
+             scheduled_at=CUTOFF+pd.Timedelta(days=45), decision_at=CUTOFF+pd.Timedelta(days=45)-pd.Timedelta(hours=1),
+             schedule_observed_at=CUTOFF, is_neutral=True),
+    ]
+    path = tmp_path/f'schedule_{"assigned" if assigned else "tbd"}.csv'
+    pd.DataFrame(rows).to_csv(path, index=False)
+    return path
+
+
+def test_init_holds_back_unassigned_cup_rows(tmp_path):
+    result = initialise(cup_schedule(tmp_path), tmp_path/'c', '2026-27')
+    assert result['games'] == 2 and result['awaiting_assignment'] == 1
+    assert result['planned_polls'] == 2
+    schedule = pd.read_csv(tmp_path/'c'/'schedule.csv', dtype={'game_id': str})
+    assert '0022601229' not in set(schedule.game_id)
+    held = pd.read_csv(tmp_path/'c'/'pending_assignment.csv', dtype={'game_id': str})
+    assert set(held.game_id) == {'0022601229'}
+
+
+def test_refresh_adds_assigned_games_and_records_revisions(tmp_path):
+    from sports_method.collect import refresh
+    collection = tmp_path/'c'
+    initialise(cup_schedule(tmp_path), collection, '2026-27')
+    later = pd.read_csv(cup_schedule(tmp_path, assigned=True), dtype={'game_id': str})
+    later.loc[later.game_id == '0022600002', 'scheduled_at'] = (CUTOFF+pd.Timedelta(days=1, hours=2)).isoformat()
+    path = tmp_path/'updated.csv'
+    later.to_csv(path, index=False)
+    result = refresh(collection, path)
+    assert result['added'] == 1 and result['start_time_revisions'] == 1
+    assert result['games'] == 3 and result['awaiting_assignment'] == 0
+    assert result['revision'] == 2 and result['planned_polls'] == 3
+    assert not (collection/'pending_assignment.csv').exists()
+    revisions = pd.read_csv(collection/'schedule_revisions.csv', dtype={'game_id': str})
+    assert revisions.field.tolist() == ['scheduled_at']
+    schedule = pd.read_csv(collection/'schedule.csv', dtype={'game_id': str})
+    assert len(schedule) == 3 and not schedule.game_id.duplicated().any()
+
+
+def test_refresh_leaves_executed_records_untouched(tmp_path):
+    from sports_method.collect import refresh
+    collection = tmp_path/'c'
+    initialise(cup_schedule(tmp_path), collection, '2026-27')
+    fixture_data(tmp_path)
+    bundle = bundle_for(tmp_path)
+    pd.read_csv(collection/'schedule.csv').to_csv(collection/'schedule.csv', index=False)
+    poll(collection, bundle, tmp_path, at=CUTOFF, execute=True, fetcher=fake_payload())
+    before = (collection/'forecasts.csv').read_bytes(), (collection/'quotes.csv').read_bytes(), \
+             (collection/'polls.csv').read_bytes()
+    refresh(collection, cup_schedule(tmp_path, assigned=True))
+    after = (collection/'forecasts.csv').read_bytes(), (collection/'quotes.csv').read_bytes(), \
+            (collection/'polls.csv').read_bytes()
+    assert before == after
+
+
+def test_identical_team_ids_rejected(tmp_path):
+    bad = pd.read_csv(cup_schedule(tmp_path), dtype={'game_id': str})
+    bad.loc[0, 'away_id'] = bad.loc[0, 'home_id']
+    path = tmp_path/'bad.csv'
+    bad.to_csv(path, index=False)
+    with pytest.raises(ValueError, match='identical team IDs'):
+        initialise(path, tmp_path/'bad-collection', '2026-27')

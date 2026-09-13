@@ -1,0 +1,166 @@
+{
+  "mode": "deployment_release",
+  "label": "2026-27 prospective",
+  "features": [
+    "margin_diff",
+    "scored_diff",
+    "allowed_diff",
+    "win_rate_diff",
+    "history_count_diff",
+    "home_rest",
+    "away_rest",
+    "home_b2b",
+    "away_b2b",
+    "elo_diff",
+    "neutral"
+  ],
+  "logistic": {
+    "mean": [
+      -0.11920537805523258,
+      -0.06172860540024783,
+      0.057476772654984735,
+      -0.003694044046037518,
+      0.0021594940613913313,
+      2.30915460520678,
+      2.2390833076250707,
+      0.16427579824155483,
+      0.19373746722196514,
+      -0.044451829688650975,
+      0.0021594940613913313
+    ],
+    "scale": [
+      8.68513659407869,
+      6.964709947410561,
+      7.074927342244686,
+      0.25763623444274747,
+      0.3057295856283469,
+      1.6942253931168092,
+      1.7030359699969941,
+      0.3705256541100154,
+      0.3952255824417027,
+      148.3876930367292,
+      0.04642015345504737
+    ],
+    "coef": [
+      0.23004919444312782,
+      0.2321738442701747,
+      0.1549231067355259,
+      -0.13250553725075,
+      -0.05190813384376247,
+      0.0460179427528729,
+      0.03474609099450626,
+      -0.04115580629447454,
+      -0.09115480484023504,
+      0.1038134461695028,
+      0.38952448900714914,
+      -0.040111133658062695
+    ]
+  },
+  "home_rate": 0.5512879839580441,
+  "calibrators": {
+    "logistic": {
+      "intercept": -0.07486001843382976,
+      "slope": 1.3671004693595932
+    },
+    "boosted": {
+      "intercept": -0.09015178237147187,
+      "slope": 1.402066539762594
+    }
+  },
+  "selected_params": {
+    "max_depth": 3,
+    "n_estimators": 100,
+    "learning_rate": 0.03,
+    "reg_lambda": 10,
+    "min_child_weight": 20,
+    "tree_method": "hist",
+    "objective": "binary:logistic",
+    "eval_metric": "logloss",
+    "n_jobs": 2,
+    "random_state": 42,
+    "base_score": 0.5
+  },
+  "l2": 0.01,
+  "candidate": {
+    "primary": "logistic regression, all eleven features, lambda=0.01, sigmoid calibration",
+    "features": [
+      "margin_diff",
+      "scored_diff",
+      "allowed_diff",
+      "win_rate_diff",
+      "history_count_diff",
+      "home_rest",
+      "away_rest",
+      "home_b2b",
+      "away_b2b",
+      "elo_diff",
+      "neutral"
+    ],
+    "l2": 0.01,
+    "offset_q": 0.5,
+    "intercept_penalized": false,
+    "standardization": "mean/scale fitted on refit rows only",
+    "calibration": "single sigmoid (intercept + exp slope, L2 0.001) fitted on calibration period only",
+    "elo": {
+      "initial": 1500,
+      "k": 20,
+      "scale": 400,
+      "home_advantage": 65,
+      "season_reset": false
+    },
+    "rolling_window_settled_games": 20,
+    "rest_cap_days": 14,
+    "back_to_back_threshold_days": 1.5,
+    "cold_start": {
+      "scoring_averages": 0,
+      "win_rate": 0.5
+    },
+    "comparators": {
+      "home_rate": "constant home-win rate of the refit rows",
+      "elo": "fixed Elo probability, uncalibrated",
+      "boosted": "secondary; four predeclared candidates selected on the tune period"
+    },
+    "boosted_grid": [
+      {
+        "max_depth": 2,
+        "n_estimators": 100
+      },
+      {
+        "max_depth": 2,
+        "n_estimators": 250
+      },
+      {
+        "max_depth": 3,
+        "n_estimators": 100
+      },
+      {
+        "max_depth": 3,
+        "n_estimators": 250
+      }
+    ]
+  },
+  "refit_games": 6483,
+  "boundaries": {
+    "train": "2025-07-01",
+    "tune": "2026-01-01",
+    "calibration": "2026-07-01"
+  },
+  "split_counts": {
+    "train": 6000,
+    "tune": 483,
+    "calibration": 736
+  },
+  "created_at": "2026-09-13T06:26:37.173401+00:00",
+  "code_sha256": "cc226f4c49cb81928865b0a7f6c1c8957d411b66f817bc02bf0c755d3e2d58d1",
+  "data_sha256": {
+    "games.csv": "32d3037da5088ea9a726a2fc561b7fcb8a2230bef3007742f3602449df691d73",
+    "results.csv": "62e88041b0d981f0bb1307144fd6a0dcf616a4fefae8b3f2ed36997b088e97e2"
+  },
+  "versions": {
+    "python": "3.12.14",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "sklearn": "1.9.1",
+    "xgboost": "3.4.1"
+  }
+}
