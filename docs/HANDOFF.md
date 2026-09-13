@@ -123,23 +123,80 @@ is the 12 extra reports from the three-slot test. Cross-environment agreement is
 what the earlier disagreement was missing, and it is what makes this result
 trustworthy rather than merely favourable.
 
-## Immediate next step
+## Audit, 2026-09-13 (later the same day)
 
-Decide whether to adopt availability into the frozen candidate. Adoption requires
-a new frozen release AND prospective capture from opening night, since backfilled
-reports cannot establish what was visible before a game.
+Work landed from another session in commit `0d8d451`, "nba pre agentic finished
+and nfl added" - roughly 1,900 lines not reviewed in this handoff:
+
+- A full NFL track: `nfl_train`, `nfl_collect`, `nfl_data`, `nfl_qb`,
+  `nfl_policy`, `nfl_monitor`, plus `collection/nfl-2026` and `nfl-pair-v1`.
+- `player_impact.py` - weights declared statuses by prior minutes. This is the
+  right next step: the availability result above uses UNWEIGHTED counts, so a
+  star and a two-way contract count the same, and -0.003311 is a floor.
+- `challenger.py`, `agents.py` (a seam, not agents yet), `pair_monitor.py`.
+- `docs/GATE_B.md` - the Gate B pre-registration, written before any qualifying
+  data exists. Correct discipline, but UNTRACKED, so it carries no verifiable
+  timestamp until committed.
+- `tests/test_odds_ingestion.py` - runs the ingestion code over a real saved
+  payload rather than synthetic events.
+
+Verified during the audit:
+
+- **Live odds ingestion works.** `data/raw/odds-live-20260913T193307Z` holds a
+  real payload: 41 NBA events, h2h market, 5 books (betmgm, betrivers, bovada,
+  draftkings, fanduel). First event is Pistons vs Celtics at
+  2026-10-20T19:00:00Z, matching the schedule exactly.
+- **The drift gate held.** The NFL work touched none of the four gated modules,
+  so `runs/release-2026-27-v2` is still VALID (surface `393f959d...`).
+  `runs/release-2026-27` has no surface hash and is stale - delete it.
+- **Nothing has run.** `collection/2026-27` has 1,200 games and 773 planned
+  polls, and 0 executed polls, 0 quotes recorded.
+- **A git remote now exists**: github.com/zaykay101111/trade.
+- **Book coverage may force abstentions.** Events in the sample carry between 1
+  and 5 books; the reference rule needs at least 3 excluding the execution book.
+  That sample is five weeks pre-season, so treat it as a floor and re-measure in
+  October. A high abstention rate directly shrinks the Gate B sample.
+
+Risk worth stating: the NFL expansion doubled the maintenance surface 37 days
+before a hard deadline, while the NBA track still has zero polls executed and an
+unadopted feature set. The blueprint puts expansion after a developed
+single-sport platform, one sport at a time.
+
+## Current goal
+
+Finish the pipeline and optimise the feature set honestly - adding AND removing -
+then build the agent layer behind measurable gates. The working prompt for this
+phase is in the conversation; its three parts are:
+
+1. **Feature optimisation.** Pre-register the search in `docs/FEATURE_SEARCH.md`
+   BEFORE running it: candidate pool, selection rule, stopping rule. Add
+   candidates (player-weighted availability first, then rest/travel interactions
+   and schedule spots) and remove candidates (`neutral`, `history_count_diff`,
+   and `scored_diff`/`allowed_diff` if `margin_diff` already carries them).
+   Select only on each fold's tuning period, never on validation. Report every
+   variant including the losers. Adopt nothing without a new frozen release.
+2. **Finish the pipeline.** Wire availability in if the search keeps it,
+   re-freeze, add prospective injury capture marked `prospective`, schedule the
+   three jobs, and prove one full slate end to end before opening night.
+3. **Agent layer.** The four blueprint roles, with an annotated extraction set,
+   precision/recall intervals, and an agent-on versus agent-off comparison
+   BEFORE any agent touches a forecast. The extractor schema carries no
+   probability or stake field.
+
+A slide deck explaining the pipeline and its usage was produced this session
+(`nba-forecasting-pipeline.pptx`, delivered in chat, not committed).
 
 ## Open decisions (all blocking)
 
-1. **Adopt availability into the frozen candidate?** Recommended yes, pending the
-   re-run. Requires a NEW frozen release and prospective capture from opening
-   night, because backfilled reports cannot establish what was visible before a
-   game.
-2. **Free Odds API key** (the-odds-api.com, no card) — only Kyler can create it.
-3. **Execution book** — whichever he would actually bet at.
-4. **$59/$119 odds backfill** — not authorised. Would make the market-residual
-   model trainable before opening night and answer Gate B retrospectively.
-5. **GitHub** — 19 commits, still local only, no remote.
+1. **Adopt availability into the frozen candidate?** Recommended yes. Requires a
+   new frozen release and prospective capture from opening night.
+2. **Execution book label** - needed only as a string, so it can be excluded from
+   its own reference. No account required.
+3. **$59/$119 odds backfill** - not authorised.
+4. **Commit the untracked work**: `docs/GATE_B.md`, `tests/test_odds_ingestion.py`,
+   the `test_nfl_prospective.py` edit, `collection/nfl-pair-v1/`. Delete the stale
+   `runs/release-2026-27`.
+5. **Freeze NFL scope** until the NBA collector is running.
 
 ## Deadline
 

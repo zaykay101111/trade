@@ -22,6 +22,17 @@ POLICY = {"probability_haircut": .015, "cost_per_stake": .005, "min_ev": .02,
           "max_open_fraction": .10, "max_daily_fraction": .10, "stake_increment": 1.}
 
 
+def future_cutoff():
+    """A cutoff safely ahead of wall-clock.
+
+    These tests freeze a bundle at the real current time and then issue against
+    a mocked clock, so the cutoff must stay in the future or `created_at` stops
+    preceding issuance. A hardcoded timestamp silently rots the moment real time
+    passes it.
+    """
+    return pd.Timestamp.now(tz="UTC").ceil("min")+pd.Timedelta(hours=1)
+
+
 def big_fixture(tmp_path):
     """Large enough to satisfy the production fit/calibration minimums."""
     return nfl_fixture(tmp_path, seasons=(2019, 2020, 2021, 2022, 2023, 2024),
@@ -65,7 +76,7 @@ def test_freeze_is_single_use_and_reserves_the_holdout(tmp_path):
 def test_poll_window_backdating_and_drift_gates(tmp_path, monkeypatch):
     data = big_fixture(tmp_path)
     pair = frozen_pair(tmp_path, data)
-    cutoff = pd.Timestamp("2026-09-13T19:25:00Z")
+    cutoff = future_cutoff()
     collection = future_collection(tmp_path, data, cutoff)
     out = tmp_path/"records"
     with pytest.raises(ValueError, match="backdate"):
@@ -92,7 +103,7 @@ def test_poll_window_backdating_and_drift_gates(tmp_path, monkeypatch):
 def test_recorded_and_simulated_stay_separate(tmp_path, monkeypatch):
     data = big_fixture(tmp_path)
     pair = frozen_pair(tmp_path, data)
-    cutoff = pd.Timestamp("2026-09-13T19:25:00Z")
+    cutoff = future_cutoff()
     collection = future_collection(tmp_path, data, cutoff)
     out = tmp_path/"records"
     nc.poll_nfl(collection, pair, data, out, at=str(cutoff-pd.Timedelta(minutes=2)))
@@ -113,7 +124,7 @@ def test_recorded_and_simulated_stay_separate(tmp_path, monkeypatch):
 def test_late_completion_refuses_to_issue(tmp_path, monkeypatch):
     data = big_fixture(tmp_path)
     pair = frozen_pair(tmp_path, data)
-    cutoff = pd.Timestamp("2026-09-13T19:25:00Z")
+    cutoff = future_cutoff()
     collection = future_collection(tmp_path, data, cutoff)
     times = iter([(cutoff-pd.Timedelta(minutes=2)).isoformat(),
                   (cutoff+pd.Timedelta(seconds=1)).isoformat()])
@@ -133,7 +144,7 @@ def settled_records(tmp_path, outcomes):
     records.mkdir(parents=True)
     schedule_rows = []
     import hashlib
-    base = pd.Timestamp("2026-09-13T19:25:00Z")
+    base = future_cutoff()
     for i, outcome in enumerate(outcomes):
         game_id = f"2026_0{i+1}_XXX_YYY"
         cutoff = base+pd.Timedelta(days=7*i)

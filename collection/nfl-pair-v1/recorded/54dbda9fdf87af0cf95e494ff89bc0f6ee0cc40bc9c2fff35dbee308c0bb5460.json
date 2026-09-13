@@ -1,0 +1,54 @@
+{
+  "sport": "nfl",
+  "contract": "nfl_regular_fullgame_moneyline_ot_tie_push",
+  "mode": "prospective",
+  "issued_at": "2026-09-13 19:20:22.718629+00:00",
+  "inputs_observed_at": "2026-09-13 19:20:22.458091+00:00",
+  "game_id": "2026_01_ARI_LAC",
+  "season": 2026,
+  "week": 1,
+  "home_id": "LAC",
+  "away_id": "ARI",
+  "scheduled_at": "2026-09-13 20:25:00+00:00",
+  "cutoff": "2026-09-13 19:25:00+00:00",
+  "predictions": {
+    "p_control_home_given_decided": 0.8087918339208688,
+    "p_challenger_home_given_decided": 0.8100988999812003,
+    "p_tie": 0.0022471910112359553,
+    "control_three_way": {
+      "away": 0.19077848480704324,
+      "tie": 0.0022471910112359553,
+      "home": 0.8069743241817209
+    },
+    "challenger_three_way": {
+      "away": 0.1894743559738136,
+      "tie": 0.0022471910112359553,
+      "home": 0.8082784530149505
+    }
+  },
+  "features": {
+    "margin_diff": 17.2,
+    "scored_diff": 1.5,
+    "allowed_diff": -15.7,
+    "win_rate_diff": 0.6,
+    "history_count_diff": 0.0,
+    "home_rest": 21.0,
+    "away_rest": 21.0,
+    "elo_diff": 195.53212863788076,
+    "neutral": 0.0,
+    "div_game": 0.0
+  },
+  "provenance": {
+    "pair_sha256": "20268d209e34d423b08bb60da64184ce5ba0035584055ac9db8f987bcf94fade",
+    "schedule_sha256": "0f5edba3489af4a76274c015f6231dbeececeb1bd9cb3554aa3be799b7eb7449",
+    "data_sha256": {
+      "games.csv": "7c23fbd663e14561d1c6ddc27ab91281773152b7aa2903ce7647cb651ba5c6f7",
+      "results.csv": "8fec453c55894a5235307054858ffadab862141c2235ba228630baddb6aa2788"
+    },
+    "surface": {
+      "nfl_data": "6e19d48436a6efd9f0649256e483d6efafa105b1a973faa65c3d426d9d2a8443",
+      "nfl_collect": "df0fb6a27ad4bef2fc5fac6945efb78395883293969836f0d456b1e90b6e7835"
+    },
+    "settled_games_used": 6721
+  }
+}

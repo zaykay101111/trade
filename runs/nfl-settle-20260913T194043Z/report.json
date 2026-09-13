@@ -1,0 +1,68 @@
+{
+  "created_at": "2026-09-13T19:40:43.840921+00:00",
+  "sport": "nfl",
+  "mode": "recorded",
+  "snapshots": 4,
+  "warning": "Descriptive monitoring of frozen NFL models. No promotion, no odds, no ROI. Development did not meet the advancement criteria, so this is a research comparison. Simulated records are rehearsal and never evidence. NBA and NFL metrics are never pooled.",
+  "coverage": {
+    "sport": "nfl",
+    "as_of": "2026-09-13 19:40:43.840929+00:00",
+    "season": 2026,
+    "scheduled_games": 272,
+    "past_cutoffs": 14,
+    "recorded": 4,
+    "missed_games": 10,
+    "missed": [
+      {
+        "game_id": "2026_01_NE_SEA",
+        "decision_at": "2026-09-09 23:20:00+00:00"
+      },
+      {
+        "game_id": "2026_01_SF_LA",
+        "decision_at": "2026-09-10 23:35:00+00:00"
+      },
+      {
+        "game_id": "2026_01_ATL_PIT",
+        "decision_at": "2026-09-13 16:00:00+00:00"
+      },
+      {
+        "game_id": "2026_01_BAL_IND",
+        "decision_at": "2026-09-13 16:00:00+00:00"
+      },
+      {
+        "game_id": "2026_01_BUF_HOU",
+        "decision_at": "2026-09-13 16:00:00+00:00"
+      },
+      {
+        "game_id": "2026_01_CHI_CAR",
+        "decision_at": "2026-09-13 16:00:00+00:00"
+      },
+      {
+        "game_id": "2026_01_CLE_JAX",
+        "decision_at": "2026-09-13 16:00:00+00:00"
+      },
+      {
+        "game_id": "2026_01_NO_DET",
+        "decision_at": "2026-09-13 16:00:00+00:00"
+      },
+      {
+        "game_id": "2026_01_NYJ_TEN",
+        "decision_at": "2026-09-13 16:00:00+00:00"
+      },
+      {
+        "game_id": "2026_01_TB_CIN",
+        "decision_at": "2026-09-13 16:00:00+00:00"
+      }
+    ],
+    "next_cutoff": "2026-09-13 23:20:00+00:00"
+  },
+  "voided_cancelled": [],
+  "awaiting_result": [
+    "2026_01_GB_MIN",
+    "2026_01_ARI_LAC",
+    "2026_01_WAS_PHI",
+    "2026_01_MIA_LV"
+  ],
+  "settled": 0,
+  "status": "No snapshot has a settled result yet"
+}
